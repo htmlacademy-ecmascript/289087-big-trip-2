@@ -8,17 +8,22 @@ export default class TripPresenter {
   sortComponent = new SortView();
   eventsListComponent = new EventsListView();
 
-  constructor({container}) {
+  constructor({ container, eventsModel }) {
     this.container = container;
+    this.eventsModel = eventsModel;
   }
 
   init() {
+    this.events = [...this.eventsModel.getEvents()];
+
     render(this.sortComponent, this.container);
     render(this.eventsListComponent, this.container);
-    render(new EventEditFormView(), this.eventsListComponent.getElement());
+    render(new EventEditFormView({ event: this.events[0], isNewEvent: false }), this.eventsListComponent.getElement());
+    render(new EventEditFormView({}), this.eventsListComponent.getElement());
 
-    for (let i = 0; i < 3; i++) {
-      render(new EventView(), this.eventsListComponent.getElement());
+
+    for (let i = 0; i < this.events.length; i++) {
+      render(new EventView({ event: this.events[i] }), this.eventsListComponent.getElement());
     }
   }
 }
