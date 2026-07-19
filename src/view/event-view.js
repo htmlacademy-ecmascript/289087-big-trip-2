@@ -1,5 +1,5 @@
 import dayjs from 'dayjs';
-import { createElement } from '../render.js';
+import AbstractView from '../framework/view/abstract-view.js';
 import { MOCK_OFFERS } from '../mock/offers.js';
 import { MOCK_DESTINATIONS } from '../mock/destinations.js';
 
@@ -88,7 +88,7 @@ const createEventTemplate = (event) => {
       <div class="event">
         <time class="event__date" datetime="${eventDate}">${shortDate}</time>
         <div class="event__type">
-          <img class="event__type-icon" width="42" height="42" src="img/icons/${type.toLowerCase()}.png" alt="Event type icon">
+          <img class="event__type-icon" width="42" height="42" src="img/icons/${type}.png" alt="Event type icon">
         </div>
         <h3 class="event__title">${type} ${destination}</h3>
         <div class="event__schedule">
@@ -120,24 +120,25 @@ const createEventTemplate = (event) => {
   `;
 };
 
-export default class EventView {
-  constructor({ event }) {
-    this.event = event;
+export default class EventView extends AbstractView {
+  #event = null;
+  #handleArrowClick = null;
+
+  constructor({ event, onArrowClick }) {
+    super();
+    this.#event = event;
+    this.#handleArrowClick = onArrowClick;
+
+    this.element.querySelector('.event__rollup-btn')
+      .addEventListener('click', this.#arrowClickHandler);
   }
 
-  getTemplate() {
-    return createEventTemplate(this.event);
+  get template() {
+    return createEventTemplate(this.#event);
   }
 
-  getElement() {
-    if (!this.element) {
-      this.element = createElement(this.getTemplate());
-    }
-
-    return this.element;
-  }
-
-  removeElement() {
-    this.element = null;
-  }
+  #arrowClickHandler = (evt) => {
+    evt.preventDefault();
+    this.#handleArrowClick();
+  };
 }

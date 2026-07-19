@@ -1,5 +1,5 @@
 import dayjs from 'dayjs';
-import { createElement } from '../render.js';
+import AbstractView from '../framework/view/abstract-view.js';
 import { BLANK_EVENT, EVENT_TYPES } from '../const.js';
 import { MOCK_DESTINATIONS } from '../mock/destinations.js';
 import { MOCK_OFFERS } from '../mock/offers.js';
@@ -193,29 +193,43 @@ const createEventEditFormTemplate = (event, isNewEvent) => {
   );
 };
 
-export default class EventEditFormView {
+export default class EventEditFormView extends AbstractView {
+  #event = null;
+  #isNewEvent = null;
+  #handleFormSubmit = null;
+  #handleArrowClick = null;
+
   constructor({
     event = BLANK_EVENT,
     isNewEvent = true,
+    onFormSubmit,
+    onArrowClick
   }) {
-    this.event = event;
-    this.isNewEvent = isNewEvent;
+    super();
+    this.#event = event;
+    this.#isNewEvent = isNewEvent;
+    this.#handleFormSubmit = onFormSubmit;
+    this.#handleArrowClick = onArrowClick;
+
+    this.element.querySelector('form')
+      .addEventListener('submit', this.#formSubmitHandler);
+
+    this.element.querySelector('.event__rollup-btn')
+      .addEventListener('click', this.#arrowClickHandler);
   }
 
-  getTemplate() {
-    return createEventEditFormTemplate(this.event, this.isNewEvent);
+  get template() {
+    return createEventEditFormTemplate(this.#event, this.#isNewEvent);
   }
 
-  getElement() {
-    if (!this.element) {
-      this.element = createElement(this.getTemplate());
-    }
+  #formSubmitHandler = (evt) => {
+    evt.preventDefault();
+    this.#handleFormSubmit();
+  };
 
-    return this.element;
-  }
-
-  removeElement() {
-    this.element = null;
-  }
+  #arrowClickHandler = (evt) => {
+    evt.preventDefault();
+    this.#handleArrowClick();
+  };
 }
 

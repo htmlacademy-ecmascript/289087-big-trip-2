@@ -1,5 +1,5 @@
 import { EVENT_TYPES } from '../const.js';
-import { getRandomInteger, shuffle } from '../utils.js';
+import { getRandomInteger, shuffle, generateId } from '../utils.js';
 
 const offersTitles = [
   'Add luggage',
@@ -20,8 +20,8 @@ const createOffers = () =>
 
     return {
       type,
-      offers: titles.map((title, index) => ({
-        id: `${type.toLowerCase()}-${index}`,
+      offers: titles.map((title) => ({
+        id: generateId(),
         title,
         price: getRandomInteger(1, 150),
       })),

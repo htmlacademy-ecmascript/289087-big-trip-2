@@ -1,5 +1,5 @@
 import { DESTINATIONS } from '../const.js';
-import { getRandomArrayElement, getRandomInteger } from '../utils.js';
+import { generateId, getRandomArrayElement, getRandomInteger } from '../utils.js';
 
 const descriptionFragments = [
   'Lorem ipsum dolor sit amet, consectetur adipiscing elit. ',
@@ -31,7 +31,7 @@ const createDestinationPhotos = (place) =>
 
 const generateMockDestinations = () =>
   DESTINATIONS.map((name) => ({
-    id: `${name.toUpperCase()}`,
+    id: generateId(),
     name,
     description: createDestinationDescription(),
     pictures: createDestinationPhotos(name),

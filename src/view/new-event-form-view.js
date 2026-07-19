@@ -1,4 +1,4 @@
-import { createElement } from '../render.js';
+import AbstractView from '../framework/view/abstract-view.js';
 
 const createNewEventFormTemplate = () => (
   `<li class="trip-events__item">
@@ -165,20 +165,8 @@ const createNewEventFormTemplate = () => (
   </li>`);
 
 
-export default class NewEventFormView {
-  getTemplate() {
+export default class NewEventFormView extends AbstractView {
+  get template() {
     return createNewEventFormTemplate();
-  }
-
-  getElement() {
-    if (!this.element) {
-      this.element = createElement(this.getTemplate());
-    }
-
-    return this.element;
-  }
-
-  removeElement() {
-    this.element = null;
   }
 }

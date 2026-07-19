@@ -20,3 +20,5 @@ export const shuffle = (items) => {
 };
 
 export const capitalize = (value) => value.charAt(0).toUpperCase() + value.slice(1);
+
+export const generateId = () => Math.random().toString(16).slice(2);

@@ -37,12 +37,15 @@ const getRandomOfferIds = (type) =>
 const getRandomDestinationId = () => getRandomArrayElement(MOCK_DESTINATIONS).id;
 const getRandomType = () => getRandomArrayElement(EVENT_TYPES);
 
+const generateId = () => Math.random().toString(16).slice(2);
+
 export const createMockEvent = () => {
   const type = getRandomType();
   const startTime = getRandomStartDate();
   const finishTime = getRandomEndDate(startTime);
 
   return {
+    id: generateId(),
     destination: getRandomDestinationId(), // string
     type,
     offers: getRandomOfferIds(type), // [string]
