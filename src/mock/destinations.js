@@ -1,5 +1,5 @@
-import { DESTINATIONS } from '../const.js';
-import { generateId, getRandomArrayElement, getRandomInteger } from '../utils.js';
+import { DESTINATIONS } from '../utils/const.js';
+import { generateId, getRandomArrayElement, getRandomInteger } from '../utils/common.js';
 
 const descriptionFragments = [
   'Lorem ipsum dolor sit amet, consectetur adipiscing elit. ',

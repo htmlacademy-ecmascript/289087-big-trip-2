@@ -36,16 +36,16 @@ const humanizeDuration = (duration) => {
 
 
 const formatEvent = (event) => {
-  const {offers: offersIds, destination: destinationId, isFavorite, startTime, finishTime} = event;
-  const start = dayjs(startTime);
-  const end = dayjs(finishTime);
+  const {offers: offersIds, destination: destinationId, isFavorite, dateFrom, dateTo} = event;
+  const start = dayjs(dateFrom);
+  const end = dayjs(dateTo);
 
   const eventDate = start.format(DATE_FORMAT);
   const shortDate = start.format(SHORT_DATE_FORMAT);
-  const startDate = start.format(HTML_DATE_TIME_FORMAT);
-  const endDate = end.format(HTML_DATE_TIME_FORMAT);
-  const startClock = start.format(TIME_FORMAT);
-  const endClock = end.format(TIME_FORMAT);
+  const startDatetime = start.format(HTML_DATE_TIME_FORMAT);
+  const endDatetime = end.format(HTML_DATE_TIME_FORMAT);
+  const startTime = start.format(TIME_FORMAT);
+  const endTime = end.format(TIME_FORMAT);
   const duration = humanizeDuration(end.diff(start, 'minute'));
 
   const favoriteClassName = isFavorite && 'event__favorite-btn--active';
@@ -61,10 +61,10 @@ const formatEvent = (event) => {
     destination,
     eventDate,
     shortDate,
-    startDate,
-    endDate,
-    startClock,
-    endClock,
+    startDatetime,
+    endDatetime,
+    startTime,
+    endTime,
     duration,
     favoriteClassName,
   };
@@ -81,7 +81,7 @@ const createOffersTemplate = (offers) =>
 
 const createEventTemplate = (event) => {
   const view = formatEvent(event);
-  const {destination, type, price, offers, eventDate, shortDate, startClock, endClock, startDate, endDate, duration, favoriteClassName} = view;
+  const {destination, type, price, offers, eventDate, shortDate, startTime, endTime, startDatetime, endDatetime, duration, favoriteClassName} = view;
 
   return `
     <li class="trip-events__item">
@@ -93,9 +93,9 @@ const createEventTemplate = (event) => {
         <h3 class="event__title">${type} ${destination}</h3>
         <div class="event__schedule">
           <p class="event__time">
-            <time class="event__start-time" datetime="${startDate}">${startClock}</time>
+            <time class="event__start-time" datetime="${startDatetime}">${startTime}</time>
             &mdash;
-            <time class="event__end-time" datetime="${endDate}">${endClock}</time>
+            <time class="event__end-time" datetime="${endDatetime}">${endTime}</time>
           </p>
           <p class="event__duration">${duration}</p>
         </div>

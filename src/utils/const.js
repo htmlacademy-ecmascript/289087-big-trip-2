@@ -2,8 +2,8 @@ export const BLANK_EVENT = {
   destination: '',
   type: 'flight',
   offers: [],
-  startTime: new Date(),
-  finishTime: new Date(),
+  dateFrom: new Date(),
+  dateTo: new Date(),
   price: 0,
   isFavorite: false
 };
@@ -29,3 +29,10 @@ export const DESTINATIONS = [
   'London',
   'Stuttgart'
 ];
+
+export const FilterType = {
+  EVERYTHING: 'everything',
+  FUTURE: 'future',
+  PRESENT: 'present',
+  PAST: 'past',
+};

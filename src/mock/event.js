@@ -1,6 +1,6 @@
 import dayjs from 'dayjs';
-import { getRandomArrayElement, getRandomInteger, shuffle } from '../utils.js';
-import { EVENT_TYPES } from '../const.js';
+import { getRandomArrayElement, getRandomInteger, shuffle } from '../utils/common.js';
+import { EVENT_TYPES } from '../utils/const.js';
 import { MOCK_DESTINATIONS } from './destinations.js';
 import { MOCK_OFFERS } from './offers.js';
 
@@ -15,8 +15,8 @@ const getRandomStartDate = () => {
   return dayjs().add(daysGap, 'day').toDate();
 };
 
-const getRandomEndDate = (startDate) =>
-  dayjs(startDate)
+const getRandomEndDate = (dateFrom) =>
+  dayjs(dateFrom)
     .add(getRandomInteger(0, MAX_DURATION_HOURS), 'hours')
     .add(getRandomInteger(0, MAX_DURATION_MINUTES), 'minutes')
     .toDate();
@@ -41,8 +41,8 @@ const generateId = () => Math.random().toString(16).slice(2);
 
 export const createMockEvent = () => {
   const type = getRandomType();
-  const startTime = getRandomStartDate();
-  const finishTime = getRandomEndDate(startTime);
+  const dateFrom = getRandomStartDate();
+  const dateTo = getRandomEndDate(dateFrom);
 
   return {
     id: generateId(),
@@ -50,8 +50,8 @@ export const createMockEvent = () => {
     type,
     offers: getRandomOfferIds(type), // [string]
     isFavorite: !!getRandomInteger(0, 1),
-    startTime, // string
-    finishTime, // string
+    dateFrom, // string
+    dateTo, // string
     price: getRandomInteger(0, MAX_PRICE)
   };
 };

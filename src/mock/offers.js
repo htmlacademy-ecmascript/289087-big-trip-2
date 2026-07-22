@@ -1,5 +1,5 @@
-import { EVENT_TYPES } from '../const.js';
-import { getRandomInteger, shuffle, generateId } from '../utils.js';
+import { EVENT_TYPES } from '../utils/const.js';
+import { getRandomInteger, shuffle, generateId } from '../utils/common.js';
 
 const offersTitles = [
   'Add luggage',
