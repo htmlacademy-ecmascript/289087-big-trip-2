@@ -1,9 +1,9 @@
 import dayjs from 'dayjs';
 import AbstractView from '../framework/view/abstract-view.js';
-import { BLANK_EVENT, EVENT_TYPES } from '../const.js';
+import { BLANK_EVENT, EVENT_TYPES } from '../utils/const.js';
 import { MOCK_DESTINATIONS } from '../mock/destinations.js';
 import { MOCK_OFFERS } from '../mock/offers.js';
-import { capitalize } from '../utils.js';
+import { capitalize } from '../utils/common.js';
 
 const DISPLAY_DATE_TIME_FORMAT = 'DD/MM/YY HH:mm';
 
@@ -107,26 +107,26 @@ const createDestinationOptionsTemplate = () =>
     .join('');
 
 const formatEvent = (event) => {
-  const {destination: destinationId, startTime, finishTime} = event;
+  const {destination: destinationId, dateFrom, dateTo} = event;
 
-  const start = dayjs(startTime);
-  const end = dayjs(finishTime);
-  const startDate = start.format(DISPLAY_DATE_TIME_FORMAT);
-  const endDate = end.format(DISPLAY_DATE_TIME_FORMAT);
+  const start = dayjs(dateFrom);
+  const end = dayjs(dateTo);
+  const startDatetime = start.format(DISPLAY_DATE_TIME_FORMAT);
+  const endDatetime = end.format(DISPLAY_DATE_TIME_FORMAT);
 
   const destination = destinationsMap.get(destinationId) ?? null;
 
   return {
     ...event,
     destination,
-    startDate,
-    endDate,
+    startDatetime,
+    endDatetime,
   };
 };
 
 const createEventEditFormTemplate = (event, isNewEvent) => {
   const view = formatEvent(event);
-  const {destination, type, price, offers, startDate, endDate} = view;
+  const {destination, type, price, offers, startDatetime, endDatetime} = view;
 
   return (
     `<li class="trip-events__item">
@@ -159,10 +159,10 @@ const createEventEditFormTemplate = (event, isNewEvent) => {
 
           <div class="event__field-group  event__field-group--time">
             <label class="visually-hidden" for="event-start-time-1">From</label>
-            <input class="event__input  event__input--time" id="event-start-time-1" type="text" name="event-start-time" value="${startDate}">
+            <input class="event__input  event__input--time" id="event-start-time-1" type="text" name="event-start-time" value="${startDatetime}">
             &mdash;
             <label class="visually-hidden" for="event-end-time-1">To</label>
-            <input class="event__input  event__input--time" id="event-end-time-1" type="text" name="event-end-time" value="${endDate}">
+            <input class="event__input  event__input--time" id="event-end-time-1" type="text" name="event-end-time" value="${endDatetime}">
           </div>
 
           <div class="event__field-group  event__field-group--price">
