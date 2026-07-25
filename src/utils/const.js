@@ -37,6 +37,14 @@ export const FilterType = {
   PAST: 'past',
 };
 
+export const SortType = {
+  DEFAULT: 'day',
+  EVENT: 'event',
+  TIME: 'time',
+  PRICE: 'price',
+  OFFERS: 'offers'
+};
+
 export const TripMessages = {
   NO_EVENTS: 'Click New Event to create your first point',
   NO_PAST_EVENTS: 'There are no past events now',
