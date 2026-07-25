@@ -1,20 +1,24 @@
 import SortView from '../view/sort-view.js';
 import EventsListView from '../view/events-list-view.js';
-import { render } from '../framework/render.js';
+import { remove, render } from '../framework/render.js';
 import NoEventsView from '../view/no-events-view.js';
 import EventPresenter from './event-presenter.js';
 import { updateItem } from '../utils/event.js';
+import { SortType } from '../utils/const.js';
+import { compareByDate, compareByPrice, compareByTime } from '../utils/sort.js';
 
 export default class TripBoardPresenter {
   #tripContainer = null;
   #eventsModel = null;
 
-  #sortComponent = new SortView();
+  #sortComponent = null;
   #eventsListComponent = new EventsListView();
   #noEventsComponent = new NoEventsView();
 
-  #eventsPresenters = new Map();
   #events = [];
+  #eventsPresenters = new Map();
+  #currentSortType = SortType.DEFAULT;
+  #sourcedBoardEvents = [];
 
   constructor({ tripContainer, eventsModel }) {
     this.#tripContainer = tripContainer;
@@ -23,9 +27,47 @@ export default class TripBoardPresenter {
 
   init() {
     this.#events = [...this.#eventsModel.events];
+    this.#sourcedBoardEvents = [...this.#eventsModel.events];
 
+    this.#sortEvents();
     this.#renderTripBoard();
   }
+
+  #sortEvents(sortType) {
+    switch (sortType) {
+      case SortType.TIME:
+        this.#events.sort(compareByTime);
+        break;
+      case SortType.PRICE:
+        this.#events.sort(compareByPrice);
+        break;
+      case SortType.DEFAULT:
+      default:
+        this.#events.sort(compareByDate);
+    }
+  }
+
+  #handleSortTypeChange = (sortType) => {
+    if (this.#currentSortType === sortType) {
+      return;
+    }
+
+    this.#currentSortType = sortType;
+    this.#sortEvents(sortType);
+
+    this.#clearTripBoard();
+    this.#renderTripBoard();
+  };
+
+  #handleModeChange = () => {
+    this.#eventsPresenters.forEach((presenter) => presenter.resetView());
+  };
+
+  #handleEventChange = (updatedEvent) => {
+    this.#events = updateItem(this.#events, updatedEvent);
+    this.#sourcedBoardEvents = updateItem(this.#sourcedBoardEvents, updatedEvent);
+    this.#eventsPresenters.get(updatedEvent.id).init(updatedEvent);
+  };
 
   #renderEvent(event) {
     const eventPresenter = new EventPresenter({
@@ -49,6 +91,11 @@ export default class TripBoardPresenter {
   }
 
   #renderSort() {
+    this.#sortComponent = new SortView({
+      currentSortType: this.#currentSortType,
+      onSortTypeChange: this.#handleSortTypeChange
+    });
+
     render(this.#sortComponent, this.#tripContainer);
   }
 
@@ -64,17 +111,11 @@ export default class TripBoardPresenter {
     this.#events.forEach((event) => this.#renderEvent(event));
   }
 
-  #clearEventsList() {
+  #clearTripBoard() {
     this.#eventsPresenters.forEach((presenter) => presenter.destroy());
     this.#eventsPresenters.clear();
+
+    remove(this.#sortComponent);
+    remove(this.#eventsListComponent);
   }
-
-  #handleModeChange = () => {
-    this.#eventsPresenters.forEach((presenter) => presenter.resetView());
-  };
-
-  #handleEventChange = (updatedEvent) => {
-    this.#events = updateItem(this.#events, updatedEvent);
-    this.#eventsPresenters.get(updatedEvent.id).init(updatedEvent);
-  };
 }
