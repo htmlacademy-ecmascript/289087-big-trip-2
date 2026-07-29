@@ -1,4 +1,6 @@
 import dayjs from 'dayjs';
+import flatpickr from 'flatpickr';
+import 'flatpickr/dist/flatpickr.min.css';
 import { BLANK_EVENT, EVENT_TYPES } from '../utils/const.js';
 import { MOCK_OFFERS } from '../mock/offers.js';
 import { capitalize } from '../utils/common.js';
@@ -225,6 +227,9 @@ export default class EventEditFormView extends AbstractStatefulView {
   #destinationsById = null;
   #destinationsByName = null;
 
+  #startDatePicker = null;
+  #endDatePicker = null;
+
   constructor({
     event = BLANK_EVENT,
     isNewEvent = true,
@@ -247,6 +252,20 @@ export default class EventEditFormView extends AbstractStatefulView {
 
   get template() {
     return createEventEditFormTemplate(this._state, this.#isNewEvent, this.#destinationsById);
+  }
+
+  removeElement() {
+    super.removeElement();
+
+    if (this.#startDatePicker) {
+      this.#startDatePicker.destroy();
+      this.#startDatePicker = null;
+    }
+
+    if (this.#endDatePicker) {
+      this.#endDatePicker.destroy();
+      this.#endDatePicker = null;
+    }
   }
 
   reset(event) {
@@ -274,6 +293,8 @@ export default class EventEditFormView extends AbstractStatefulView {
     this.element
       .querySelector('.event__available-offers')
       ?.addEventListener('change', this.#offersCheckHandler);
+
+    this.#setDatepickers();
   }
 
   #formSubmitHandler = (evt) => {
@@ -335,6 +356,46 @@ export default class EventEditFormView extends AbstractStatefulView {
     });
   };
 
+  #startDateChangeHandler = ([userDate]) => {
+    this._setState({
+      dateFrom: userDate,
+    });
+    this.#endDatePicker.set('minDate', this._state.dateFrom);
+  };
+
+  #endDateChangeHandler = ([userDate]) => {
+    this._setState({
+      dateTo: userDate,
+    });
+    this.#startDatePicker.set('maxDate', this._state.dateTo);
+  };
+
+  #setDatepickers() {
+    this.#startDatePicker = flatpickr(
+      this.element.querySelector('input[name="event-start-time"]'),
+      {
+        enableTime: true,
+        'time_24hr': true,
+        dateFormat: 'd/m/y H:i',
+        defaultDate: this._state.dateFrom,
+        maxDate: this._state.dateTo,
+        onClose: this.#startDateChangeHandler,
+      },
+    );
+
+    this.#endDatePicker = flatpickr(
+      this.element.querySelector('input[name="event-end-time"]'),
+      {
+        enableTime: true,
+        'time_24hr': true,
+        dateFormat: 'd/m/y H:i',
+        defaultDate: this._state.dateTo,
+        minDate: this._state.dateFrom,
+        onClose: this.#endDateChangeHandler,
+      },
+    );
+  }
+
   static parseEventToState(event) {
     return {...event};
   }
@@ -345,13 +406,3 @@ export default class EventEditFormView extends AbstractStatefulView {
     return event;
   }
 }
-
-// Если пользователь внёс изменения в точку маршрута, не выполнил сохранение и пытается перейти
-// к редактированию другой точки маршрута либо создать новую, то в этом случае открытая форма редактирования
-// скрывается без сохранения изменений. После открывается другая форма редактирования или форма создания новой точки маршрута.
-
-// После сохранения изменений точка маршрута располагается в списке точек маршрута в порядке,
-// определённом текущей сортировкой (по дате, по длительности или по стоимости).
-
-// Дата и время начала события. Выбор времени и даты осуществляется с помощью библиотеки flatpickr.js. Выбранная дата и время отображаются в поле в формате: день/месяц/год часы:минуты (например «25/12/19 16:00»).
-// Дата и время окончания события. Формат и требования аналогичны дате начала. Дата окончания не может быть меньше даты начала события.
