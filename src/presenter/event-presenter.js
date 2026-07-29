@@ -16,10 +16,14 @@ export default class EventPresenter {
   #eventEditFormComponent = null;
 
   #event = null;
+  #destinationsById = null;
+  #destinationsByName = null;
   #mode = Mode.DEFAULT;
 
-  constructor({ eventsListContainer, onDataChange, onModeChange }) {
+  constructor({ eventsListContainer, destinationsById, destinationsByName, onDataChange, onModeChange }) {
     this.#eventsListContainer = eventsListContainer;
+    this.#destinationsById = destinationsById;
+    this.#destinationsByName = destinationsByName;
     this.#handleDataChange = onDataChange;
     this.#handleModeChange = onModeChange;
   }
@@ -39,6 +43,8 @@ export default class EventPresenter {
     this.#eventEditFormComponent = new EventEditFormView({
       event,
       isNewEvent: false,
+      destinationsById: this.#destinationsById,
+      destinationsByName: this.#destinationsByName,
       onFormSubmit: this.#handleFormSubmit,
       onEditClose: this.#handleEditClose
     });
@@ -67,6 +73,7 @@ export default class EventPresenter {
 
   resetView() {
     if (this.#mode !== Mode.DEFAULT) {
+      this.#eventEditFormComponent.reset(this.#event);
       this.#replaceFormToEvent();
     }
   }
@@ -87,6 +94,7 @@ export default class EventPresenter {
   #escKeyDownHandler = (evt) => {
     if (evt.key === 'Escape') {
       evt.preventDefault();
+      this.#eventEditFormComponent.reset(this.#event);
       this.#replaceFormToEvent();
     }
   };
@@ -104,6 +112,7 @@ export default class EventPresenter {
   };
 
   #handleEditClose = () => {
+    this.#eventEditFormComponent.reset(this.#event);
     this.#replaceFormToEvent();
   };
 }
