@@ -2,8 +2,8 @@ export const BLANK_EVENT = {
   destination: null,
   type: 'flight',
   offers: [],
-  dateFrom: new Date(),
-  dateTo: new Date(),
+  dateFrom: null,
+  dateTo: null,
   price: 0,
   isFavorite: false
 };

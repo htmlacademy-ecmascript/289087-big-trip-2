@@ -10,6 +10,7 @@ import { compareByDate, compareByPrice, compareByTime } from '../utils/sort.js';
 export default class TripBoardPresenter {
   #tripContainer = null;
   #eventsModel = null;
+  #destinationsModel = null;
 
   #sortComponent = null;
   #eventsListComponent = new EventsListView();
@@ -20,9 +21,10 @@ export default class TripBoardPresenter {
   #currentSortType = SortType.DEFAULT;
   #sourcedBoardEvents = [];
 
-  constructor({ tripContainer, eventsModel }) {
+  constructor({ tripContainer, eventsModel, destinationsModel }) {
     this.#tripContainer = tripContainer;
     this.#eventsModel = eventsModel;
+    this.#destinationsModel = destinationsModel;
   }
 
   init() {
@@ -72,6 +74,8 @@ export default class TripBoardPresenter {
   #renderEvent(event) {
     const eventPresenter = new EventPresenter({
       eventsListContainer: this.#eventsListComponent.element,
+      destinationsById: this.#destinationsModel.destinationsById,
+      destinationsByName: this.#destinationsModel.destinationsByName,
       onDataChange: this.#handleEventChange,
       onModeChange: this.#handleModeChange
     });
