@@ -45,6 +45,18 @@ export const SortType = {
   OFFERS: 'offers'
 };
 
+export const UserAction = {
+  UPDATE_EVENT: 'UPDATE_EVENT',
+  ADD_EVENT: 'ADD_EVENT',
+  DELETE_EVENT: 'DELETE_EVENT'
+};
+
+export const UpdateType = {
+  PATCH: 'PATCH',
+  MINOR: 'MINOR',
+  MAJOR: 'MAJOR',
+};
+
 export const TripMessages = {
   NO_EVENTS: 'Click New Event to create your first point',
   NO_PAST_EVENTS: 'There are no past events now',
