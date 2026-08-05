@@ -1,45 +1,76 @@
+import { remove, render } from '../framework/render.js';
 import SortView from '../view/sort-view.js';
 import EventsListView from '../view/events-list-view.js';
-import { remove, render } from '../framework/render.js';
-import NoEventsView from '../view/no-events-view.js';
+import NoEventView from '../view/no-event-view.js';
 import EventPresenter from './event-presenter.js';
-import { SortType, UpdateType, UserAction } from '../utils/const.js';
-import { compareByDate, compareByPrice, compareByTime } from '../utils/sort.js';
+import NewEventPresenter from './new-event-presenter.js';
+import { filter } from '../utils/filter.js';
+import { FilterType, SortType, UpdateType, UserAction } from '../utils/const.js';
+import { sortByDate, sortByPrice, sortByTime } from '../utils/sort.js';
 
 export default class TripBoardPresenter {
   #tripContainer = null;
   #eventsModel = null;
   #destinationsModel = null;
+  #offersModel = null;
+  #filterModel = null;
 
   #sortComponent = null;
   #eventsListComponent = new EventsListView();
-  #noEventsComponent = new NoEventsView();
+  #noEventComponent = null;
 
   #eventsPresenters = new Map();
+  #newEventPresenter = null;
   #currentSortType = SortType.DEFAULT;
+  #filterType = FilterType.EVERYTHING;
 
-  constructor({ tripContainer, eventsModel, destinationsModel }) {
+  constructor({ tripContainer, eventsModel, destinationsModel, offersModel, filterModel, onNewEventDestroy }) {
     this.#tripContainer = tripContainer;
     this.#eventsModel = eventsModel;
     this.#destinationsModel = destinationsModel;
+    this.#offersModel = offersModel;
+    this.#filterModel = filterModel;
+
+    this.#newEventPresenter = new NewEventPresenter({
+      eventsListContainer: this.#eventsListComponent.element,
+      destinationsById: this.#destinationsModel.destinationsById,
+      destinationsByName: this.#destinationsModel.destinationsByName,
+      offersByEventType: this.#offersModel.offersByEventType,
+      onDataChange: this.#handleViewAction,
+      onDestroy: onNewEventDestroy
+    });
+
     this.#eventsModel.addObserver(this.#handleModelAction);
+    this.#filterModel.addObserver(this.#handleModelAction);
   }
 
   get events() {
+    this.#filterType = this.#filterModel.filter;
+    const events = this.#eventsModel.events;
+    const filteredEvents = filter[this.#filterType](events);
+
     switch (this.#currentSortType) {
       case SortType.TIME:
-        return [...this.#eventsModel.events].sort(compareByTime);
+        return filteredEvents.sort(sortByTime);
       case SortType.PRICE:
-        return [...this.#eventsModel.events].sort(compareByPrice);
+        return filteredEvents.sort(sortByPrice);
       case SortType.DEFAULT:
-        return [...this.#eventsModel.events].sort(compareByDate);
+      // default:
+        return filteredEvents.sort(sortByDate);
     }
 
-    return this.#eventsModel.events;
+    return filteredEvents;
   }
 
   init() {
     this.#renderTripBoard();
+  }
+
+  createEvent() {
+    this.#currentSortType = SortType.DEFAULT;
+    this.#filterModel.setFilter(UpdateType.MAJOR, FilterType.EVERYTHING);
+
+    this.#newEventPresenter.init();
   }
 
   #handleSortTypeChange = (sortType) => {
@@ -54,6 +85,7 @@ export default class TripBoardPresenter {
   };
 
   #handleModeChange = () => {
+    this.#newEventPresenter.destroy();
     this.#eventsPresenters.forEach((presenter) => presenter.resetView());
   };
 
@@ -94,6 +126,8 @@ export default class TripBoardPresenter {
       eventsListContainer: this.#eventsListComponent.element,
       destinationsById: this.#destinationsModel.destinationsById,
       destinationsByName: this.#destinationsModel.destinationsByName,
+      offersByEventType: this.#offersModel.offersByEventType,
+      offersById: this.#offersModel.offersById,
       onDataChange: this.#handleViewAction,
       onModeChange: this.#handleModeChange
     });
@@ -110,12 +144,12 @@ export default class TripBoardPresenter {
     render(this.#sortComponent, this.#tripContainer);
   }
 
-  #renderEventsList() {
-    render(this.#eventsListComponent, this.#tripContainer);
-  }
+  #renderNoEvent() {
+    this.#noEventComponent = new NoEventView({
+      filterType: this.#filterType
+    });
 
-  #renderNoEvents() {
-    render(this.#noEventsComponent, this.#tripContainer);
+    render(this.#noEventComponent, this.#tripContainer);
   }
 
   #renderEvents() {
@@ -124,33 +158,29 @@ export default class TripBoardPresenter {
 
   #renderTripBoard() {
     if (this.events.length === 0) {
-      this.#renderNoEvents();
+      this.#renderNoEvent();
       return;
     }
 
     this.#renderSort();
-    this.#renderEventsList();
+    render(this.#eventsListComponent, this.#tripContainer);
     this.#renderEvents();
   }
 
   #clearTripBoard(resetSortType = false) {
+    this.#newEventPresenter.destroy();
+
     this.#eventsPresenters.forEach((presenter) => presenter.destroy());
     this.#eventsPresenters.clear();
 
     remove(this.#sortComponent);
-    remove(this.#eventsListComponent);
 
-    remove(this.#noEventsComponent);
+    if (this.#noEventComponent) {
+      remove(this.#noEventComponent);
+    }
 
     if (resetSortType) {
       this.#currentSortType = SortType.DEFAULT;
     }
   }
 }
-
-// при попытке пользователя добавить новую точку маршрута должны сбрасываться фильтры и сортировка;
-// скрываться без сохранения любая показанная форма редактирования. Подробности в техническом задании.
-
-// при закрытии формы добавления (любым способом) введённая информация не сохраняется.
-// А после сохранения новая точка должна располагаться в порядке сортировки по дате.
-
