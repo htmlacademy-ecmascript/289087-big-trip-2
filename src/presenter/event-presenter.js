@@ -1,4 +1,5 @@
 import { remove, render, replace } from '../framework/render.js';
+import {UserAction, UpdateType} from '../utils/const.js';
 import EventEditFormView from '../view/event-edit-form-view.js';
 import EventView from '../view/event-view.js';
 
@@ -18,12 +19,16 @@ export default class EventPresenter {
   #event = null;
   #destinationsById = null;
   #destinationsByName = null;
+  #offersByEventType = null;
+  #offersById = null;
   #mode = Mode.DEFAULT;
 
-  constructor({ eventsListContainer, destinationsById, destinationsByName, onDataChange, onModeChange }) {
+  constructor({ eventsListContainer, destinationsById, destinationsByName, offersByEventType, offersById, onDataChange, onModeChange }) {
     this.#eventsListContainer = eventsListContainer;
     this.#destinationsById = destinationsById;
     this.#destinationsByName = destinationsByName;
+    this.#offersByEventType = offersByEventType;
+    this.#offersById = offersById;
     this.#handleDataChange = onDataChange;
     this.#handleModeChange = onModeChange;
   }
@@ -36,6 +41,8 @@ export default class EventPresenter {
 
     this.#eventComponent = new EventView({
       event,
+      destinationsById: this.#destinationsById,
+      offersById: this.#offersById,
       onEditOpen: this.#handleEditOpen,
       onFavoriteClick: this.#handleFavoriteClick
     });
@@ -45,8 +52,10 @@ export default class EventPresenter {
       isNewEvent: false,
       destinationsById: this.#destinationsById,
       destinationsByName: this.#destinationsByName,
+      offersByEventType: this.#offersByEventType,
       onFormSubmit: this.#handleFormSubmit,
-      onEditClose: this.#handleEditClose
+      onEditClose: this.#handleEditClose,
+      onDeleteClick: this.#handleDeleteClick
     });
 
     if (prevEventComponent === null || prevEventEditFormComponent === null) {
@@ -104,15 +113,32 @@ export default class EventPresenter {
   };
 
   #handleFavoriteClick = () => {
-    this.#handleDataChange({...this.#event, isFavorite: !this.#event.isFavorite});
+    this.#handleDataChange(
+      UserAction.UPDATE_EVENT,
+      UpdateType.PATCH,
+      {...this.#event, isFavorite: !this.#event.isFavorite}
+    );
   };
 
-  #handleFormSubmit = () => {
+  #handleFormSubmit = (update) => {
+    this.#handleDataChange(
+      UserAction.UPDATE_EVENT,
+      UpdateType.MINOR,
+      update
+    );
     this.#replaceFormToEvent();
   };
 
   #handleEditClose = () => {
     this.#eventEditFormComponent.reset(this.#event);
     this.#replaceFormToEvent();
+  };
+
+  #handleDeleteClick = (event) => {
+    this.#handleDataChange(
+      UserAction.DELETE_EVENT,
+      UpdateType.MINOR,
+      event
+    );
   };
 }

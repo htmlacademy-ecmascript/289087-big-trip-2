@@ -1,7 +1,5 @@
 import dayjs from 'dayjs';
 import AbstractView from '../framework/view/abstract-view.js';
-import { MOCK_OFFERS } from '../mock/offers.js';
-import { MOCK_DESTINATIONS } from '../mock/destinations.js';
 
 const MINUTES_IN_DAY = 1440;
 const MINUTES_IN_HOUR = 60;
@@ -9,16 +7,6 @@ const DATE_FORMAT = 'YYYY-MM-DD';
 const HTML_DATE_TIME_FORMAT = 'YYYY-MM-DDTHH:mm';
 const SHORT_DATE_FORMAT = 'MMM DD';
 const TIME_FORMAT = 'HH:mm';
-
-const offersMap = new Map(
-  MOCK_OFFERS
-    .flatMap(({ offers }) => offers)
-    .map((offer) => [offer.id, offer])
-);
-
-const destinationsMap = new Map(
-  MOCK_DESTINATIONS.map((destination) => [destination.id, destination])
-);
 
 const humanizeDuration = (duration) => {
   const days = Math.floor(duration / MINUTES_IN_DAY);
@@ -35,7 +23,7 @@ const humanizeDuration = (duration) => {
 };
 
 
-const formatEvent = (event) => {
+const formatEvent = (event, destinationsById, offersById) => {
   const {offers: offersIds, destination: destinationId, isFavorite, dateFrom, dateTo} = event;
   const start = dayjs(dateFrom);
   const end = dayjs(dateTo);
@@ -51,9 +39,9 @@ const formatEvent = (event) => {
   const favoriteClassName = isFavorite && 'event__favorite-btn--active';
 
   const offers = offersIds
-    .map((id) => offersMap.get(id))
+    .map((id) => offersById.get(id))
     .filter(Boolean);
-  const destination = destinationsMap.get(destinationId)?.name ?? '';
+  const destination = destinationsById.get(destinationId)?.name ?? '';
 
   return {
     ...event,
@@ -79,8 +67,8 @@ const createOffersTemplate = (offers) =>
       </li>
     `).join('');
 
-const createEventTemplate = (event) => {
-  const view = formatEvent(event);
+const createEventTemplate = (event, destinationsById, offersById) => {
+  const view = formatEvent(event, destinationsById, offersById);
   const {destination, type, price, offers, eventDate, shortDate, startTime, endTime, startDatetime, endDatetime, duration, favoriteClassName} = view;
 
   return `
@@ -122,12 +110,16 @@ const createEventTemplate = (event) => {
 
 export default class EventView extends AbstractView {
   #event = null;
+  #destinationsById = null;
+  #offersById = null;
   #handleEditOpen = null;
   #handleFavoriteClick = null;
 
-  constructor({ event, onEditOpen, onFavoriteClick }) {
+  constructor({ event, destinationsById, offersById, onEditOpen, onFavoriteClick }) {
     super();
     this.#event = event;
+    this.#destinationsById = destinationsById;
+    this.#offersById = offersById;
     this.#handleEditOpen = onEditOpen;
     this.#handleFavoriteClick = onFavoriteClick;
 
@@ -139,7 +131,7 @@ export default class EventView extends AbstractView {
   }
 
   get template() {
-    return createEventTemplate(this.#event);
+    return createEventTemplate(this.#event, this.#destinationsById, this.#offersById);
   }
 
   #editOpenHandler = (evt) => {
