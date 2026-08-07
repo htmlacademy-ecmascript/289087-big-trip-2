@@ -1,7 +1,10 @@
-import { MOCK_OFFERS } from '../mock/offers.js';
-
 export default class OffersModel {
-  #offers = MOCK_OFFERS;
+  #offersApiService = null;
+  #offers = [];
+
+  constructor({ offersApiService }) {
+    this.#offersApiService = offersApiService;
+  }
 
   get offers() {
     return this.#offers;
@@ -19,5 +22,13 @@ export default class OffersModel {
         .flatMap(({ offers }) => offers)
         .map((offer) => [offer.id, offer])
     );
+  }
+
+  async init() {
+    try {
+      this.#offers = await this.#offersApiService.offers;
+    } catch(err) {
+      this.#offers = [];
+    }
   }
 }

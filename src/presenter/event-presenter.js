@@ -1,7 +1,7 @@
 import { remove, render, replace } from '../framework/render.js';
-import {UserAction, UpdateType} from '../utils/const.js';
 import EventEditFormView from '../view/event-edit-form-view.js';
 import EventView from '../view/event-view.js';
+import {UserAction, UpdateType} from '../utils/const.js';
 
 const Mode = {
   DEFAULT: 'DEFAULT',
@@ -17,18 +17,20 @@ export default class EventPresenter {
   #eventEditFormComponent = null;
 
   #event = null;
-  #destinationsById = null;
-  #destinationsByName = null;
-  #offersByEventType = null;
-  #offersById = null;
+  #destinationsModel = null;
+  #offersModel = null;
   #mode = Mode.DEFAULT;
 
-  constructor({ eventsListContainer, destinationsById, destinationsByName, offersByEventType, offersById, onDataChange, onModeChange }) {
+  constructor({
+    eventsListContainer,
+    destinationsModel,
+    offersModel,
+    onDataChange,
+    onModeChange
+  }) {
     this.#eventsListContainer = eventsListContainer;
-    this.#destinationsById = destinationsById;
-    this.#destinationsByName = destinationsByName;
-    this.#offersByEventType = offersByEventType;
-    this.#offersById = offersById;
+    this.#destinationsModel = destinationsModel;
+    this.#offersModel = offersModel;
     this.#handleDataChange = onDataChange;
     this.#handleModeChange = onModeChange;
   }
@@ -41,8 +43,8 @@ export default class EventPresenter {
 
     this.#eventComponent = new EventView({
       event,
-      destinationsById: this.#destinationsById,
-      offersById: this.#offersById,
+      destinationsById: this.#destinationsModel.destinationsById,
+      offersById: this.#offersModel.offersById,
       onEditOpen: this.#handleEditOpen,
       onFavoriteClick: this.#handleFavoriteClick
     });
@@ -50,9 +52,9 @@ export default class EventPresenter {
     this.#eventEditFormComponent = new EventEditFormView({
       event,
       isNewEvent: false,
-      destinationsById: this.#destinationsById,
-      destinationsByName: this.#destinationsByName,
-      offersByEventType: this.#offersByEventType,
+      destinationsById: this.#destinationsModel.destinationsById,
+      destinationsByName: this.#destinationsModel.destinationsByName,
+      offersByEventType: this.#offersModel.offersByEventType,
       onFormSubmit: this.#handleFormSubmit,
       onEditClose: this.#handleEditClose,
       onDeleteClick: this.#handleDeleteClick
@@ -76,6 +78,9 @@ export default class EventPresenter {
   }
 
   destroy() {
+    if (this.#mode === Mode.EDITING) {
+      document.removeEventListener('keydown', this.#escKeyDownHandler);
+    }
     remove(this.#eventComponent);
     remove(this.#eventEditFormComponent);
   }
@@ -99,14 +104,6 @@ export default class EventPresenter {
     this.#handleModeChange();
     this.#mode = Mode.EDITING;
   }
-
-  #escKeyDownHandler = (evt) => {
-    if (evt.key === 'Escape') {
-      evt.preventDefault();
-      this.#eventEditFormComponent.reset(this.#event);
-      this.#replaceFormToEvent();
-    }
-  };
 
   #handleEditOpen = () => {
     this.#replaceEventToForm();
@@ -134,11 +131,19 @@ export default class EventPresenter {
     this.#replaceFormToEvent();
   };
 
-  #handleDeleteClick = (event) => {
+  #handleDeleteClick = (update) => {
     this.#handleDataChange(
       UserAction.DELETE_EVENT,
       UpdateType.MINOR,
-      event
+      update
     );
+  };
+
+  #escKeyDownHandler = (evt) => {
+    if (evt.key === 'Escape') {
+      evt.preventDefault();
+      this.#eventEditFormComponent.reset(this.#event);
+      this.#replaceFormToEvent();
+    }
   };
 }

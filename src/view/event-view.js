@@ -144,3 +144,5 @@ export default class EventView extends AbstractView {
     this.#handleFavoriteClick();
   };
 }
+
+// Введённые пользователем данные экранируются.
