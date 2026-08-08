@@ -6,6 +6,7 @@ import { BLANK_EVENT, EVENT_TYPES } from '../utils/const.js';
 import { capitalize } from '../utils/common.js';
 
 const DISPLAY_DATE_TIME_FORMAT = 'DD/MM/YY HH:mm';
+const FLATPICKR_FORMAT = 'd/m/y H:i';
 const REGEX_PRICE = /^[1-9]\d*$/;
 
 const createTypesTemplate = (currentType) =>
@@ -44,19 +45,19 @@ const createTypeWrapperTemplate = (type) => `
   </div>
 `;
 
-const createDestinationOptionsTemplate = (destinationsById) =>
-  [...destinationsById.values()]
-    .map(({ name }) => `<option value="${name}"></option>`)
+const createDestinationOptionsTemplate = (destinationsByName) =>
+  [...destinationsByName.keys()]
+    .map((name) => `<option value="${name}"></option>`)
     .join('');
 
-const createDestinationFieldgroupTemplate = (type, destination, destinationsById) => `
+const createDestinationFieldgroupTemplate = (type, destination, destinationsByName) => `
   <div class="event__field-group  event__field-group--destination">
     <label class="event__label  event__type-output" for="event-destination-1">
       ${type}
     </label>
     <input class="event__input  event__input--destination" id="event-destination-1" type="text" name="event-destination" value="${destination?.name ?? ''}" list="destination-list-1" required>
     <datalist id="destination-list-1">
-      ${createDestinationOptionsTemplate(destinationsById)}
+      ${createDestinationOptionsTemplate(destinationsByName)}
     </datalist>
   </div>
 `;
@@ -185,7 +186,7 @@ const formatEvent = (event, destinationsById) => {
   };
 };
 
-const createEventEditFormTemplate = (event, isNewEvent, destinationsById, offersByEventType) => {
+const createEventEditFormTemplate = (event, isNewEvent, destinationsById, destinationsByName, offersByEventType) => {
   const view = formatEvent(event, destinationsById);
   const {destination, type, price, offers, startDatetime, endDatetime} = view;
 
@@ -194,7 +195,7 @@ const createEventEditFormTemplate = (event, isNewEvent, destinationsById, offers
       <form class="event event--edit" action="#" method="post">
         <header class="event__header">
           ${createTypeWrapperTemplate(type)}
-          ${createDestinationFieldgroupTemplate(type, destination, destinationsById)}
+          ${createDestinationFieldgroupTemplate(type, destination, destinationsByName)}
           ${createTimeFieldgroupTemplate(startDatetime, endDatetime)}
           ${createPriceFieldgroupTemplate(price)}
 
@@ -253,7 +254,7 @@ export default class EventEditFormView extends AbstractStatefulView {
   }
 
   get template() {
-    return createEventEditFormTemplate(this._state, this.#isNewEvent, this.#destinationsById, this.#offersByEventType);
+    return createEventEditFormTemplate(this._state, this.#isNewEvent, this.#destinationsById, this.#destinationsByName, this.#offersByEventType);
   }
 
   removeElement() {
@@ -299,6 +300,32 @@ export default class EventEditFormView extends AbstractStatefulView {
       .addEventListener('click', this.#eventDeleteClickHandler);
 
     this.#setDatepickers();
+  }
+
+  #setDatepickers() {
+    this.#startDatePicker = flatpickr(
+      this.element.querySelector('input[name="event-start-time"]'),
+      {
+        enableTime: true,
+        'time_24hr': true,
+        dateFormat: FLATPICKR_FORMAT,
+        defaultDate: this._state.dateFrom,
+        maxDate: this._state.dateTo,
+        onClose: this.#startDateChangeHandler,
+      },
+    );
+
+    this.#endDatePicker = flatpickr(
+      this.element.querySelector('input[name="event-end-time"]'),
+      {
+        enableTime: true,
+        'time_24hr': true,
+        dateFormat: FLATPICKR_FORMAT,
+        defaultDate: this._state.dateTo,
+        minDate: this._state.dateFrom,
+        onClose: this.#endDateChangeHandler,
+      },
+    );
   }
 
   #validatePrice(input) {
@@ -398,32 +425,6 @@ export default class EventEditFormView extends AbstractStatefulView {
     this.#startDatePicker.set('maxDate', this._state.dateTo);
   };
 
-  #setDatepickers() {
-    this.#startDatePicker = flatpickr(
-      this.element.querySelector('input[name="event-start-time"]'),
-      {
-        enableTime: true,
-        'time_24hr': true,
-        dateFormat: 'd/m/y H:i',
-        defaultDate: this._state.dateFrom,
-        maxDate: this._state.dateTo,
-        onClose: this.#startDateChangeHandler,
-      },
-    );
-
-    this.#endDatePicker = flatpickr(
-      this.element.querySelector('input[name="event-end-time"]'),
-      {
-        enableTime: true,
-        'time_24hr': true,
-        dateFormat: 'd/m/y H:i',
-        defaultDate: this._state.dateTo,
-        minDate: this._state.dateFrom,
-        onClose: this.#endDateChangeHandler,
-      },
-    );
-  }
-
   static parseEventToState(event) {
     return {...event};
   }
@@ -434,3 +435,5 @@ export default class EventEditFormView extends AbstractStatefulView {
     return event;
   }
 }
+
+// Введённые пользователем данные экранируются.

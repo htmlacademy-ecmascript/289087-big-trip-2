@@ -1,7 +1,6 @@
 import { remove, render, RenderPosition } from '../framework/render.js';
 import EventEditFormView from '../view/event-edit-form-view.js';
 import { UserAction, UpdateType, BLANK_EVENT } from '../utils/const.js';
-import { generateId } from '../utils/common.js';
 
 export default class NewEventPresenter {
   #eventsListContainer = null;
@@ -11,15 +10,19 @@ export default class NewEventPresenter {
 
   #eventEditFormComponent = null;
 
-  #destinationsById = null;
-  #destinationsByName = null;
-  #offersByEventType = null;
+  #destinationsModel = null;
+  #offersModel = null;
 
-  constructor({ eventsListContainer, destinationsById, destinationsByName, offersByEventType, onDataChange, onDestroy }) {
+  constructor({
+    eventsListContainer,
+    destinationsModel,
+    offersModel,
+    onDataChange,
+    onDestroy
+  }) {
     this.#eventsListContainer = eventsListContainer;
-    this.#destinationsById = destinationsById;
-    this.#destinationsByName = destinationsByName;
-    this.#offersByEventType = offersByEventType;
+    this.#destinationsModel = destinationsModel;
+    this.#offersModel = offersModel;
     this.#handleDataChange = onDataChange;
     this.#handleDestroy = onDestroy;
   }
@@ -32,9 +35,9 @@ export default class NewEventPresenter {
     this.#eventEditFormComponent = new EventEditFormView({
       event: BLANK_EVENT,
       isNewEvent: true,
-      destinationsById: this.#destinationsById,
-      destinationsByName: this.#destinationsByName,
-      offersByEventType: this.#offersByEventType,
+      destinationsById: this.#destinationsModel.destinationsById,
+      destinationsByName: this.#destinationsModel.destinationsByName,
+      offersByEventType: this.#offersModel.offersByEventType,
       onFormSubmit: this.#handleFormSubmit,
       // onEditClose: this.#handleEditClose,
       onDeleteClick: this.#handleDeleteClick
@@ -62,9 +65,7 @@ export default class NewEventPresenter {
     this.#handleDataChange(
       UserAction.ADD_EVENT,
       UpdateType.MINOR,
-      // Пока у нас нет сервера, который бы после сохранения
-      // выдывал честный id задачи, нам нужно позаботиться об этом самим
-      {id: generateId(), ...update},
+      update,
     );
     this.destroy();
   };

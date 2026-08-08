@@ -1,7 +1,8 @@
-import { remove, render } from '../framework/render.js';
+import { remove, render, RenderPosition } from '../framework/render.js';
 import SortView from '../view/sort-view.js';
 import EventsListView from '../view/events-list-view.js';
 import NoEventView from '../view/no-event-view.js';
+import LoadingView from '../view/loading-view.js';
 import EventPresenter from './event-presenter.js';
 import NewEventPresenter from './new-event-presenter.js';
 import { filter } from '../utils/filter.js';
@@ -17,14 +18,24 @@ export default class TripBoardPresenter {
 
   #sortComponent = null;
   #eventsListComponent = new EventsListView();
+  #loadingComponent = new LoadingView();
+
   #noEventComponent = null;
 
   #eventsPresenters = new Map();
   #newEventPresenter = null;
   #currentSortType = SortType.DEFAULT;
   #filterType = FilterType.EVERYTHING;
+  #isLoading = true;
 
-  constructor({ tripContainer, eventsModel, destinationsModel, offersModel, filterModel, onNewEventDestroy }) {
+  constructor({
+    tripContainer,
+    eventsModel,
+    destinationsModel,
+    offersModel,
+    filterModel,
+    onNewEventDestroy
+  }) {
     this.#tripContainer = tripContainer;
     this.#eventsModel = eventsModel;
     this.#destinationsModel = destinationsModel;
@@ -33,9 +44,8 @@ export default class TripBoardPresenter {
 
     this.#newEventPresenter = new NewEventPresenter({
       eventsListContainer: this.#eventsListComponent.element,
-      destinationsById: this.#destinationsModel.destinationsById,
-      destinationsByName: this.#destinationsModel.destinationsByName,
-      offersByEventType: this.#offersModel.offersByEventType,
+      destinationsModel: this.#destinationsModel,
+      offersModel: this.#offersModel,
       onDataChange: this.#handleViewAction,
       onDestroy: onNewEventDestroy
     });
@@ -55,11 +65,9 @@ export default class TripBoardPresenter {
       case SortType.PRICE:
         return filteredEvents.sort(sortByPrice);
       case SortType.DEFAULT:
-      // default:
+      default:
         return filteredEvents.sort(sortByDate);
     }
-
-    return filteredEvents;
   }
 
   init() {
@@ -118,16 +126,20 @@ export default class TripBoardPresenter {
         this.#renderTripBoard();
         // this.#renderTripInfo();
         break;
+      case UpdateType.INIT:
+        this.#isLoading = false;
+        // remove(this.#loadingComponent);
+        this.#clearTripBoard();
+        this.#renderTripBoard();
+        break;
     }
   };
 
   #renderEvent(event) {
     const eventPresenter = new EventPresenter({
       eventsListContainer: this.#eventsListComponent.element,
-      destinationsById: this.#destinationsModel.destinationsById,
-      destinationsByName: this.#destinationsModel.destinationsByName,
-      offersByEventType: this.#offersModel.offersByEventType,
-      offersById: this.#offersModel.offersById,
+      destinationsModel: this.#destinationsModel,
+      offersModel: this.#offersModel,
       onDataChange: this.#handleViewAction,
       onModeChange: this.#handleModeChange
     });
@@ -141,7 +153,11 @@ export default class TripBoardPresenter {
       onSortTypeChange: this.#handleSortTypeChange
     });
 
-    render(this.#sortComponent, this.#tripContainer);
+    render(this.#sortComponent, this.#tripContainer, RenderPosition.AFTERBEGIN);
+  }
+
+  #renderLoading() {
+    render(this.#loadingComponent, this.#tripContainer);
   }
 
   #renderNoEvent() {
@@ -157,11 +173,15 @@ export default class TripBoardPresenter {
   }
 
   #renderTripBoard() {
+    if (this.#isLoading) {
+      this.#renderLoading();
+      return;
+    }
+
     if (this.events.length === 0) {
       this.#renderNoEvent();
       return;
     }
-
     this.#renderSort();
     render(this.#eventsListComponent, this.#tripContainer);
     this.#renderEvents();
@@ -174,6 +194,10 @@ export default class TripBoardPresenter {
     this.#eventsPresenters.clear();
 
     remove(this.#sortComponent);
+
+    if (this.#loadingComponent) {
+      remove(this.#loadingComponent);
+    }
 
     if (this.#noEventComponent) {
       remove(this.#noEventComponent);

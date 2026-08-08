@@ -1,7 +1,10 @@
-import { MOCK_DESTINATIONS } from '../mock/destinations.js';
-
 export default class DestinationsModel {
-  #destinations = MOCK_DESTINATIONS;
+  #destinationsApiService = null;
+  #destinations = [];
+
+  constructor({ destinationsApiService }) {
+    this.#destinationsApiService = destinationsApiService;
+  }
 
   get destinations() {
     return this.#destinations;
@@ -17,5 +20,13 @@ export default class DestinationsModel {
     return new Map(
       this.#destinations.map((destination) => [destination.name, destination])
     );
+  }
+
+  async init() {
+    try {
+      this.#destinations = await this.#destinationsApiService.destinations;
+    } catch(err) {
+      this.#destinations = [];
+    }
   }
 }

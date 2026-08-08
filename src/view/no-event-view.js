@@ -1,7 +1,7 @@
 import AbstractView from '../framework/view/abstract-view.js';
 import { FilterType } from '../utils/const.js';
 
-const NoEventMessages = {
+const NoEventMessage = {
   [FilterType.EVERYTHING]: 'Click New Event to create your first point',
   [FilterType.PAST]: 'There are no past events now',
   [FilterType.PRESENT]: 'There are no present events now',
@@ -9,7 +9,7 @@ const NoEventMessages = {
 };
 
 const createNoEventTemplate = (filterType) => {
-  const text = NoEventMessages[filterType];
+  const text = NoEventMessage[filterType];
 
   return `<p class="trip-events__msg">${text}</p>`;
 };

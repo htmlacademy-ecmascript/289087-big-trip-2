@@ -1,52 +1,103 @@
 import Observable from '../framework/observable.js';
-import { createMockEvent } from '../mock/event.js';
-
-const EVENTS_NUMBER = 7;
+import { UpdateType } from '../utils/const.js';
 
 export default class EventsModel extends Observable {
-  #events = Array.from({ length: EVENTS_NUMBER }, createMockEvent);
+  #eventsApiService = null;
+  #events = [];
+
+  constructor({ eventsApiService }) {
+    super();
+    this.#eventsApiService = eventsApiService;
+  }
 
   get events() {
     return this.#events;
   }
 
-  updateEvent(updateType, update) {
+  async init() {
+    try {
+      const events = await this.#eventsApiService.events;
+      this.#events = events.map(this.#adaptToClient);
+    } catch(err) {
+      this.#events = [];
+    }
+
+    this._notify(UpdateType.INIT);
+  }
+
+  async updateEvent(updateType, update) {
     const index = this.#events.findIndex((event) => event.id === update.id);
 
     if (index === -1) {
       throw new Error('Can\'t update unexisting event');
     }
 
-    this.#events = [
-      ...this.#events.slice(0, index),
-      update,
-      ...this.#events.slice(index + 1)
-    ];
+    try {
+      const response = await this.#eventsApiService.updateEvent(update);
+      const updatedEvent = this.#adaptToClient(response);
 
-    this._notify(updateType, update);
+      this.#events = [
+        ...this.#events.slice(0, index),
+        updatedEvent,
+        ...this.#events.slice(index + 1)
+      ];
+
+      this._notify(updateType, updatedEvent);
+    } catch(err) {
+      throw new Error('Can\'t update event');
+    }
   }
 
-  addEvent(updateType, update) {
-    this.#events = [
-      update,
-      ...this.#events
-    ];
+  async addEvent(updateType, update) {
+    try {
+      const response = await this.#eventsApiService.addEvent(update);
+      const newEvent = this.#adaptToClient(response);
 
-    this._notify(updateType, update);
+      this.#events = [
+        newEvent,
+        ...this.#events
+      ];
+
+      this._notify(updateType, newEvent);
+    } catch(err) {
+      throw new Error('Can\'t add event');
+    }
   }
 
-  deleteEvent(updateType, update) {
+  async deleteEvent(updateType, update) {
     const index = this.#events.findIndex((event) => event.id === update.id);
 
     if (index === -1) {
       throw new Error('Can\'t delete unexisting event');
     }
 
-    this.#events = [
-      ...this.#events.slice(0, index),
-      ...this.#events.slice(index + 1)
-    ];
+    try {
+      await this.#eventsApiService.deleteEvent(update);
 
-    this._notify(updateType);
+      this.#events = [
+        ...this.#events.slice(0, index),
+        ...this.#events.slice(index + 1)
+      ];
+      this._notify(updateType);
+    } catch(err) {
+      throw new Error('Can\'t delete event');
+    }
+
+  }
+
+  #adaptToClient(point) {
+    const adaptedEvent = {...point,
+      price: point['base_price'],
+      dateFrom: point['date_from'],
+      dateTo: point['date_to'],
+      isFavorite: point['is_favorite'],
+    };
+
+    delete adaptedEvent['base_price'];
+    delete adaptedEvent['date_from'];
+    delete adaptedEvent['date_to'];
+    delete adaptedEvent['is_favorite'];
+
+    return adaptedEvent;
   }
 }
