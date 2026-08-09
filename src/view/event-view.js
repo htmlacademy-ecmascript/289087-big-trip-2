@@ -74,7 +74,7 @@ const createOffersTemplate = (offers) =>
 
 const createEventTemplate = (event, destinationsById, offersById) => {
   const formattedEvent = formatEvent(event, destinationsById, offersById);
-  const {destination, type, price, offers, eventDate, shortDate, startTime, endTime, startDatetime, endDatetime, duration, favoriteButtonClassName} = formattedEvent;
+  const { destination, type, price, offers, eventDate, shortDate, startTime, endTime, startDatetime, endDatetime, duration, favoriteButtonClassName } = formattedEvent;
 
   return `
     <li class="trip-events__item">

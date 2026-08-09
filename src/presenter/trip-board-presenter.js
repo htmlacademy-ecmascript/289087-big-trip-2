@@ -91,10 +91,7 @@ export default class TripBoardPresenter {
     this.#currentSortType = SortType.DEFAULT;
     this.#filterModel.setFilter(UpdateType.MAJOR, FilterType.EVERYTHING);
 
-    if (this.#noEventComponent) {
-      remove(this.#noEventComponent);
-      this.#noEventComponent = null;
-    }
+    remove(this.#noEventComponent);
 
     this.#newEventPresenter.init();
   }

@@ -190,7 +190,7 @@ const formatEvent = (event, destinationsById) => {
 
 const createEventEditFormTemplate = (event, isNewEvent, destinationsById, destinationsByName, offersByEventType) => {
   const eventData = formatEvent(event, destinationsById);
-  const {destination, type, price, offers, startDatetime, endDatetime, isDisabled, isSaving, isDeleting} = eventData;
+  const { destination, type, price, offers, startDatetime, endDatetime, isDisabled, isSaving, isDeleting } = eventData;
 
   return (
     `<li class="trip-events__item">
