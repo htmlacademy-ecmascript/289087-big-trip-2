@@ -12,22 +12,22 @@ import OffersApiService from './api-service/offers-api-service.js';
 import TripInfoPresenter from './presenter/trip-info-presenter.js';
 
 const AUTHORIZATION = `Basic ${Math.random().toString(36).slice(2)}`;
-const END_POINT = 'https://22.objects.htmlacademy.pro/big-trip';
+const API_ENDPOINT = 'https://22.objects.htmlacademy.pro/big-trip';
 
 const tripEventsElement = document.querySelector('.trip-events');
 const tripMainElement = document.querySelector('.trip-main');
 const tripControlsElement = document.querySelector('.trip-controls__filters');
 
 const eventsModel = new EventsModel({
-  eventsApiService: new EventsApiService(END_POINT, AUTHORIZATION)
+  eventsApiService: new EventsApiService(API_ENDPOINT, AUTHORIZATION)
 });
 
 const destinationsModel = new DestinationsModel({
-  destinationsApiService: new DestinationsApiService(END_POINT, AUTHORIZATION)
+  destinationsApiService: new DestinationsApiService(API_ENDPOINT, AUTHORIZATION)
 });
 
 const offersModel = new OffersModel({
-  offersApiService: new OffersApiService(END_POINT, AUTHORIZATION)
+  offersApiService: new OffersApiService(API_ENDPOINT, AUTHORIZATION)
 });
 
 const filterModel = new FilterModel();
@@ -75,10 +75,10 @@ Promise.all([
   destinationsModel.init(),
 ])
   .then(() => eventsModel.init())
-  .catch(() => {
-    tripBoardPresenter.showLoadingError();
-  })
   .then(() => {
     tripInfoPresenter.init();
     render(newEventButtonComponent, tripMainElement);
+  })
+  .catch(() => {
+    tripBoardPresenter.showLoadingError();
   });

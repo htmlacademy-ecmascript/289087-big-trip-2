@@ -7,6 +7,7 @@ const MAX_TITLE_POINTS = 3;
 
 export default class TripInfoPresenter {
   #container = null;
+
   #eventsModel = null;
   #destinationsModel = null;
   #offersModel = null;
