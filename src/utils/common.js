@@ -1,13 +1,3 @@
-export const shuffle = (items) => {
-  const shuffledItems = [...items];
+const capitalize = (value) => value.charAt(0).toUpperCase() + value.slice(1);
 
-  for (let i = shuffledItems.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-
-    [shuffledItems[i], shuffledItems[j]] = [shuffledItems[j], shuffledItems[i]];
-  }
-
-  return shuffledItems;
-};
-
-export const capitalize = (value) => value.charAt(0).toUpperCase() + value.slice(1);
+export { capitalize };

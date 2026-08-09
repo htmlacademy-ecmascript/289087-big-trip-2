@@ -1,4 +1,5 @@
 import { remove, render, RenderPosition } from '../framework/render.js';
+import UiBlocker from '../framework/ui-blocker/ui-blocker.js';
 import SortView from '../view/sort-view.js';
 import EventsListView from '../view/events-list-view.js';
 import NoEventView from '../view/no-event-view.js';
@@ -6,27 +7,38 @@ import LoadingView from '../view/loading-view.js';
 import EventPresenter from './event-presenter.js';
 import NewEventPresenter from './new-event-presenter.js';
 import { filter } from '../utils/filter.js';
-import { FilterType, SortType, UpdateType, UserAction } from '../utils/const.js';
+import { FilterType, LoadingStatus, SortType, UpdateType, UserAction } from '../utils/const.js';
 import { sortByDate, sortByPrice, sortByTime } from '../utils/sort.js';
+
+const TimeLimit = {
+  LOWER_LIMIT: 350,
+  UPPER_LIMIT: 1000
+};
 
 export default class TripBoardPresenter {
   #tripContainer = null;
+
   #eventsModel = null;
   #destinationsModel = null;
   #offersModel = null;
   #filterModel = null;
 
+  #handleNewEventClose = null;
+
   #sortComponent = null;
   #eventsListComponent = new EventsListView();
-  #loadingComponent = new LoadingView();
-
+  #loadingComponent = null;
   #noEventComponent = null;
 
   #eventsPresenters = new Map();
   #newEventPresenter = null;
+
   #currentSortType = SortType.DEFAULT;
-  #filterType = FilterType.EVERYTHING;
-  #isLoading = true;
+  #loadingStatus = LoadingStatus.LOADING;
+  #uiBlocker = new UiBlocker({
+    lowerLimit: TimeLimit.LOWER_LIMIT,
+    upperLimit: TimeLimit.UPPER_LIMIT
+  });
 
   constructor({
     tripContainer,
@@ -34,20 +46,21 @@ export default class TripBoardPresenter {
     destinationsModel,
     offersModel,
     filterModel,
-    onNewEventDestroy
+    onNewEventClose
   }) {
     this.#tripContainer = tripContainer;
     this.#eventsModel = eventsModel;
     this.#destinationsModel = destinationsModel;
     this.#offersModel = offersModel;
     this.#filterModel = filterModel;
+    this.#handleNewEventClose = onNewEventClose;
 
     this.#newEventPresenter = new NewEventPresenter({
       eventsListContainer: this.#eventsListComponent.element,
       destinationsModel: this.#destinationsModel,
       offersModel: this.#offersModel,
       onDataChange: this.#handleViewAction,
-      onDestroy: onNewEventDestroy
+      onDestroy: this.#handleNewEventDestroy
     });
 
     this.#eventsModel.addObserver(this.#handleModelAction);
@@ -55,9 +68,9 @@ export default class TripBoardPresenter {
   }
 
   get events() {
-    this.#filterType = this.#filterModel.filter;
+    const filterType = this.#filterModel.filter;
     const events = this.#eventsModel.events;
-    const filteredEvents = filter[this.#filterType](events);
+    const filteredEvents = [...filter[filterType](events)];
 
     switch (this.#currentSortType) {
       case SortType.TIME:
@@ -78,62 +91,19 @@ export default class TripBoardPresenter {
     this.#currentSortType = SortType.DEFAULT;
     this.#filterModel.setFilter(UpdateType.MAJOR, FilterType.EVERYTHING);
 
+    if (this.#noEventComponent) {
+      remove(this.#noEventComponent);
+      this.#noEventComponent = null;
+    }
+
     this.#newEventPresenter.init();
   }
 
-  #handleSortTypeChange = (sortType) => {
-    if (this.#currentSortType === sortType) {
-      return;
-    }
-
-    this.#currentSortType = sortType;
-
+  showLoadingError() {
+    this.#loadingStatus = LoadingStatus.FAILURE;
     this.#clearTripBoard();
     this.#renderTripBoard();
-  };
-
-  #handleModeChange = () => {
-    this.#newEventPresenter.destroy();
-    this.#eventsPresenters.forEach((presenter) => presenter.resetView());
-  };
-
-  #handleViewAction = (actionType, updateType, update) => {
-    switch (actionType) {
-      case UserAction.UPDATE_EVENT:
-        this.#eventsModel.updateEvent(updateType, update);
-        break;
-      case UserAction.ADD_EVENT:
-        this.#eventsModel.addEvent(updateType, update);
-        break;
-      case UserAction.DELETE_EVENT:
-        this.#eventsModel.deleteEvent(updateType, update);
-        break;
-    }
-  };
-
-  #handleModelAction = (updateType, data) => {
-    switch (updateType) {
-      case UpdateType.PATCH:
-        this.#eventsPresenters.get(data.id).init(data);
-        break;
-      case UpdateType.MINOR:
-        this.#clearTripBoard();
-        this.#renderTripBoard();
-        // this.#renderTripInfo();
-        break;
-      case UpdateType.MAJOR:
-        this.#clearTripBoard(true);
-        this.#renderTripBoard();
-        // this.#renderTripInfo();
-        break;
-      case UpdateType.INIT:
-        this.#isLoading = false;
-        // remove(this.#loadingComponent);
-        this.#clearTripBoard();
-        this.#renderTripBoard();
-        break;
-    }
-  };
+  }
 
   #renderEvent(event) {
     const eventPresenter = new EventPresenter({
@@ -157,34 +127,40 @@ export default class TripBoardPresenter {
   }
 
   #renderLoading() {
+    this.#loadingComponent = new LoadingView({
+      status: this.#loadingStatus,
+    });
+
     render(this.#loadingComponent, this.#tripContainer);
   }
 
   #renderNoEvent() {
     this.#noEventComponent = new NoEventView({
-      filterType: this.#filterType
+      filterType: this.#filterModel.filter,
     });
 
     render(this.#noEventComponent, this.#tripContainer);
   }
 
-  #renderEvents() {
-    this.events.forEach((event) => this.#renderEvent(event));
-  }
-
   #renderTripBoard() {
-    if (this.#isLoading) {
-      this.#renderLoading();
-      return;
+    switch (this.#loadingStatus) {
+      case LoadingStatus.LOADING:
+      case LoadingStatus.FAILURE:
+        this.#renderLoading();
+        return;
     }
 
-    if (this.events.length === 0) {
+    const events = this.events;
+
+    render(this.#eventsListComponent, this.#tripContainer);
+
+    if (events.length === 0) {
       this.#renderNoEvent();
       return;
     }
+
     this.#renderSort();
-    render(this.#eventsListComponent, this.#tripContainer);
-    this.#renderEvents();
+    events.forEach((event) => this.#renderEvent(event));
   }
 
   #clearTripBoard(resetSortType = false) {
@@ -194,17 +170,89 @@ export default class TripBoardPresenter {
     this.#eventsPresenters.clear();
 
     remove(this.#sortComponent);
-
-    if (this.#loadingComponent) {
-      remove(this.#loadingComponent);
-    }
-
-    if (this.#noEventComponent) {
-      remove(this.#noEventComponent);
-    }
+    remove(this.#loadingComponent);
+    remove(this.#noEventComponent);
 
     if (resetSortType) {
       this.#currentSortType = SortType.DEFAULT;
     }
   }
+
+  #handleNewEventDestroy = () => {
+    if (this.events.length === 0) {
+      this.#renderNoEvent();
+    }
+
+    this.#handleNewEventClose();
+  };
+
+  #handleSortTypeChange = (sortType) => {
+    if (this.#currentSortType === sortType) {
+      return;
+    }
+
+    this.#currentSortType = sortType;
+
+    this.#clearTripBoard();
+    this.#renderTripBoard();
+  };
+
+  #handleModeChange = () => {
+    this.#newEventPresenter.destroy();
+    this.#eventsPresenters.forEach((presenter) => presenter.resetView());
+  };
+
+  #handleViewAction = async (actionType, updateType, update) => {
+    this.#uiBlocker.block();
+
+    switch (actionType) {
+      case UserAction.UPDATE_EVENT:
+        this.#eventsPresenters.get(update.id).setSaving();
+        try {
+          await this.#eventsModel.updateEvent(updateType, update);
+        } catch(err) {
+          this.#eventsPresenters.get(update.id).setAborting();
+        }
+        break;
+      case UserAction.ADD_EVENT:
+        this.#newEventPresenter.setSaving();
+        try {
+          await this.#eventsModel.addEvent(updateType, update);
+        } catch(err) {
+          this.#newEventPresenter.setAborting();
+        }
+        break;
+      case UserAction.DELETE_EVENT:
+        this.#eventsPresenters.get(update.id).setDeleting();
+        try {
+          await this.#eventsModel.deleteEvent(updateType, update);
+        } catch (err) {
+          this.#eventsPresenters.get(update.id).setAborting();
+        }
+        break;
+    }
+
+    this.#uiBlocker.unblock();
+  };
+
+  #handleModelAction = (updateType, data) => {
+    switch (updateType) {
+      case UpdateType.PATCH:
+        this.#eventsPresenters.get(data.id).init(data);
+        break;
+      case UpdateType.MINOR:
+        this.#clearTripBoard();
+        this.#renderTripBoard();
+        break;
+      case UpdateType.MAJOR:
+        this.#clearTripBoard(true);
+        this.#renderTripBoard();
+        break;
+      case UpdateType.INIT:
+        this.#loadingStatus = LoadingStatus.READY;
+        this.#clearTripBoard();
+        this.#renderTripBoard();
+        break;
+    }
+  };
 }

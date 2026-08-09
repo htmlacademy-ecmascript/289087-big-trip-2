@@ -4,14 +4,14 @@ import { UserAction, UpdateType, BLANK_EVENT } from '../utils/const.js';
 
 export default class NewEventPresenter {
   #eventsListContainer = null;
-  #handleDataChange = null;
-  #handleDestroy = null;
-  // #handleEditClose = null;
-
-  #eventEditFormComponent = null;
 
   #destinationsModel = null;
   #offersModel = null;
+
+  #handleDataChange = null;
+  #handleDestroy = null;
+
+  #eventEditFormComponent = null;
 
   constructor({
     eventsListContainer,
@@ -39,7 +39,6 @@ export default class NewEventPresenter {
       destinationsByName: this.#destinationsModel.destinationsByName,
       offersByEventType: this.#offersModel.offersByEventType,
       onFormSubmit: this.#handleFormSubmit,
-      // onEditClose: this.#handleEditClose,
       onDeleteClick: this.#handleDeleteClick
     });
 
@@ -53,12 +52,31 @@ export default class NewEventPresenter {
       return;
     }
 
-    this.#handleDestroy();
-
     remove(this.#eventEditFormComponent);
     this.#eventEditFormComponent = null;
 
     document.removeEventListener('keydown', this.#escKeyDownHandler);
+
+    this.#handleDestroy();
+  }
+
+  setSaving() {
+    this.#eventEditFormComponent.updateElement({
+      isDisabled: true,
+      isSaving: true,
+    });
+  }
+
+  setAborting() {
+    const resetFormState = () => {
+      this.#eventEditFormComponent.updateElement({
+        isDisabled: false,
+        isSaving: false,
+        isDeleting: false,
+      });
+    };
+
+    this.#eventEditFormComponent.shake(resetFormState);
   }
 
   #handleFormSubmit = (update) => {
@@ -67,7 +85,6 @@ export default class NewEventPresenter {
       UpdateType.MINOR,
       update,
     );
-    this.destroy();
   };
 
   #handleDeleteClick = () => {

@@ -25,10 +25,6 @@ export default class OffersModel {
   }
 
   async init() {
-    try {
-      this.#offers = await this.#offersApiService.offers;
-    } catch(err) {
-      this.#offers = [];
-    }
+    this.#offers = await this.#offersApiService.offers;
   }
 }

@@ -38,7 +38,7 @@ const tripBoardPresenter = new TripBoardPresenter({
   destinationsModel,
   offersModel,
   filterModel,
-  onNewEventDestroy: handleNewEventFormClose
+  onNewEventClose: handleNewEventFormClose
 });
 
 const filterPresenter = new FilterPresenter({
@@ -55,7 +55,7 @@ const tripInfoPresenter = new TripInfoPresenter({
 });
 
 const newEventButtonComponent = new NewEventButtonView({
-  onClick: handleNewEventButtonClick
+  onNewEventClick: handleNewEventButtonClick
 });
 
 function handleNewEventFormClose() {
@@ -75,6 +75,9 @@ Promise.all([
   destinationsModel.init(),
 ])
   .then(() => eventsModel.init())
+  .catch(() => {
+    tripBoardPresenter.showLoadingError();
+  })
   .then(() => {
     tripInfoPresenter.init();
     render(newEventButtonComponent, tripMainElement);

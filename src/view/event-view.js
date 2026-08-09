@@ -1,4 +1,5 @@
 import dayjs from 'dayjs';
+import he from 'he';
 import AbstractView from '../framework/view/abstract-view.js';
 
 const MINUTES_IN_DAY = 1440;
@@ -24,21 +25,24 @@ const humanizeDuration = (duration) => {
 
 
 const formatEvent = (event, destinationsById, offersById) => {
-  const {offers: offersIds, destination: destinationId, isFavorite, dateFrom, dateTo} = event;
-  const start = dayjs(dateFrom);
-  const end = dayjs(dateTo);
+  const { offers: offerIds, destination: destinationId, isFavorite, dateFrom, dateTo } = event;
 
-  const eventDate = start.format(DATE_FORMAT);
-  const shortDate = start.format(SHORT_DATE_FORMAT);
-  const startDatetime = start.format(HTML_DATE_TIME_FORMAT);
-  const endDatetime = end.format(HTML_DATE_TIME_FORMAT);
-  const startTime = start.format(TIME_FORMAT);
-  const endTime = end.format(TIME_FORMAT);
-  const duration = humanizeDuration(end.diff(start, 'minute'));
+  const startDate = dayjs(dateFrom);
+  const endDate = dayjs(dateTo);
 
-  const favoriteClassName = isFavorite && 'event__favorite-btn--active';
+  const eventDate = startDate.format(DATE_FORMAT);
+  const shortDate = startDate.format(SHORT_DATE_FORMAT);
+  const startDatetime = startDate.format(HTML_DATE_TIME_FORMAT);
+  const endDatetime = endDate.format(HTML_DATE_TIME_FORMAT);
+  const startTime = startDate.format(TIME_FORMAT);
+  const endTime = endDate.format(TIME_FORMAT);
+  const duration = humanizeDuration(endDate.diff(startDate, 'minute'));
 
-  const offers = offersIds
+  const favoriteButtonClassName = isFavorite
+    ? 'event__favorite-btn--active'
+    : '';
+
+  const offers = offerIds
     .map((id) => offersById.get(id))
     .filter(Boolean);
   const destination = destinationsById.get(destinationId)?.name ?? '';
@@ -54,22 +58,23 @@ const formatEvent = (event, destinationsById, offersById) => {
     startTime,
     endTime,
     duration,
-    favoriteClassName,
+    favoriteButtonClassName,
   };
 };
 
 const createOffersTemplate = (offers) =>
-  offers.map(({ title, price }) => `
+  offers
+    .map(({ title, price }) => `
       <li class="event__offer">
-        <span class="event__offer-title">${title}</span>
+        <span class="event__offer-title">${he.encode(title)}</span>
           &plus;&euro;&nbsp;
         <span class="event__offer-price">${price}</span>
       </li>
     `).join('');
 
 const createEventTemplate = (event, destinationsById, offersById) => {
-  const view = formatEvent(event, destinationsById, offersById);
-  const {destination, type, price, offers, eventDate, shortDate, startTime, endTime, startDatetime, endDatetime, duration, favoriteClassName} = view;
+  const formattedEvent = formatEvent(event, destinationsById, offersById);
+  const {destination, type, price, offers, eventDate, shortDate, startTime, endTime, startDatetime, endDatetime, duration, favoriteButtonClassName} = formattedEvent;
 
   return `
     <li class="trip-events__item">
@@ -78,7 +83,7 @@ const createEventTemplate = (event, destinationsById, offersById) => {
         <div class="event__type">
           <img class="event__type-icon" width="42" height="42" src="img/icons/${type}.png" alt="Event type icon">
         </div>
-        <h3 class="event__title">${type} ${destination}</h3>
+        <h3 class="event__title">${type} ${he.encode(destination)}</h3>
         <div class="event__schedule">
           <p class="event__time">
             <time class="event__start-time" datetime="${startDatetime}">${startTime}</time>
@@ -94,7 +99,7 @@ const createEventTemplate = (event, destinationsById, offersById) => {
         <ul class="event__selected-offers">
           ${createOffersTemplate(offers)}
         </ul>
-        <button class="event__favorite-btn ${favoriteClassName}" type="button">
+        <button class="event__favorite-btn ${favoriteButtonClassName}" type="button">
           <span class="visually-hidden">Add to favorite</span>
           <svg class="event__favorite-icon" width="28" height="28" viewBox="0 0 28 28">
             <path d="M14 21l-8.22899 4.3262 1.57159-9.1631L.685209 9.67376 9.8855 8.33688 14 0l4.1145 8.33688 9.2003 1.33688-6.6574 6.48934 1.5716 9.1631L14 21z"/>
@@ -144,5 +149,3 @@ export default class EventView extends AbstractView {
     this.#handleFavoriteClick();
   };
 }
-
-// Введённые пользователем данные экранируются.

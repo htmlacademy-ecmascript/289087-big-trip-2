@@ -7,9 +7,11 @@ const isPresent = (event) =>
   dayjs(event.dateTo).isAfter(dayjs());
 const isPast = (event) => dayjs(event.dateTo).isBefore(dayjs());
 
-export const filter = {
+const filter = {
   [FilterType.EVERYTHING]: (events) => events,
   [FilterType.FUTURE]: (events) => events.filter(isFuture),
   [FilterType.PRESENT]: (events) => events.filter(isPresent),
   [FilterType.PAST]: (events) => events.filter(isPast),
 };
+
+export { filter };
