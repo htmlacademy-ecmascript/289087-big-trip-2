@@ -1,4 +1,5 @@
 import dayjs from 'dayjs';
+import he from 'he';
 import flatpickr from 'flatpickr';
 import 'flatpickr/dist/flatpickr.min.css';
 import AbstractStatefulView from '../framework/view/abstract-stateful-view.js';
@@ -9,37 +10,37 @@ const DISPLAY_DATE_TIME_FORMAT = 'DD/MM/YY HH:mm';
 const FLATPICKR_FORMAT = 'd/m/y H:i';
 const REGEX_PRICE = /^[1-9]\d*$/;
 
-const createTypesTemplate = (currentType) =>
-  EVENT_TYPES.map((typeItem) => `<div class="event__type-item">
+const createEventTypesTemplate = (currentType) =>
+  EVENT_TYPES.map((type) => `<div class="event__type-item">
       <input
-        id="event-type-${typeItem}-1"
+        id="event-type-${type}-1"
         class="event__type-input  visually-hidden"
         type="radio"
         name="event-type"
-        value="${typeItem}"
-        ${typeItem === currentType ? 'checked' : ''}
+        value="${type}"
+        ${type === currentType ? 'checked' : ''}
       >
       <label
-        class="event__type-label  event__type-label--${typeItem}"
-        for="event-type-${typeItem}-1"
+        class="event__type-label  event__type-label--${type}"
+        for="event-type-${type}-1"
       >
-        ${capitalize(typeItem)}
+        ${capitalize(type)}
       </label>
     </div>`)
     .join('');
 
-const createTypeWrapperTemplate = (type) => `
+const createTypeWrapperTemplate = (type, isDisabled) => `
   <div class="event__type-wrapper">
     <label class="event__type  event__type-btn" for="event-type-toggle-1">
       <span class="visually-hidden">Choose event type</span>
       <img class="event__type-icon" width="17" height="17" src="img/icons/${type}.png" alt="Event type icon">
     </label>
-    <input class="event__type-toggle  visually-hidden" id="event-type-toggle-1" type="checkbox">
+    <input class="event__type-toggle  visually-hidden" id="event-type-toggle-1" type="checkbox" ${isDisabled ? 'disabled' : ''}>
 
     <div class="event__type-list">
       <fieldset class="event__type-group">
         <legend class="visually-hidden">Event type</legend>
-        ${createTypesTemplate(type)}
+        ${createEventTypesTemplate(type)}
       </fieldset>
     </div>
   </div>
@@ -47,38 +48,38 @@ const createTypeWrapperTemplate = (type) => `
 
 const createDestinationOptionsTemplate = (destinationsByName) =>
   [...destinationsByName.keys()]
-    .map((name) => `<option value="${name}"></option>`)
+    .map((name) => `<option value="${he.encode(name)}"></option>`)
     .join('');
 
-const createDestinationFieldgroupTemplate = (type, destination, destinationsByName) => `
+const createDestinationFieldgroupTemplate = (type, destination, destinationsByName, isDisabled) => `
   <div class="event__field-group  event__field-group--destination">
     <label class="event__label  event__type-output" for="event-destination-1">
       ${type}
     </label>
-    <input class="event__input  event__input--destination" id="event-destination-1" type="text" name="event-destination" value="${destination?.name ?? ''}" list="destination-list-1" required>
+    <input class="event__input  event__input--destination" id="event-destination-1" type="text" name="event-destination" value="${he.encode(destination?.name ?? '')}" list="destination-list-1" ${isDisabled ? 'disabled' : ''} required>
     <datalist id="destination-list-1">
       ${createDestinationOptionsTemplate(destinationsByName)}
     </datalist>
   </div>
 `;
 
-const createTimeFieldgroupTemplate = (startDatetime, endDatetime) => `
+const createTimeFieldgroupTemplate = (startDatetime, endDatetime, isDisabled) => `
   <div class="event__field-group  event__field-group--time">
     <label class="visually-hidden" for="event-start-time-1">From</label>
-    <input class="event__input  event__input--time" id="event-start-time-1" type="text" name="event-start-time" value="${startDatetime}" required>
+    <input class="event__input  event__input--time" id="event-start-time-1" type="text" name="event-start-time" value="${startDatetime}" ${isDisabled ? 'disabled' : ''} required>
     &mdash;
     <label class="visually-hidden" for="event-end-time-1">To</label>
-    <input class="event__input  event__input--time" id="event-end-time-1" type="text" name="event-end-time" value="${endDatetime}" required>
+    <input class="event__input  event__input--time" id="event-end-time-1" type="text" name="event-end-time" value="${endDatetime}" ${isDisabled ? 'disabled' : ''} required>
   </div>
 `;
 
-const createPriceFieldgroupTemplate = (price) => `
+const createPriceFieldgroupTemplate = (price, isDisabled) => `
   <div class="event__field-group  event__field-group--price">
     <label class="event__label" for="event-price-1">
       <span class="visually-hidden">Price</span>
       &euro;
     </label>
-    <input class="event__input  event__input--price" id="event-price-1" type="text" name="event-price" value="${price}" required>
+    <input class="event__input  event__input--price" id="event-price-1" type="text" name="event-price" value="${price}" ${isDisabled ? 'disabled' : ''} required>
   </div>
 `;
 
@@ -95,16 +96,16 @@ const createDestinationTemplate = (destination) => {
 
   return `
     <section class="event__section  event__section--destination">
-      <h3 class="event__section-title  event__section-title--destination">${name}</h3>
+      <h3 class="event__section-title  event__section-title--destination">${he.encode(name)}</h3>
       ${description
-    ? `<p class="event__destination-description">${description}</p>`
+    ? `<p class="event__destination-description">${he.encode(description)}</p>`
     : ''}
 
       ${pictures.length
     ? `<div class="event__photos-container">
         <div class="event__photos-tape">
           ${pictures.map((photo) => `
-            <img class="event__photo" src="${photo.src}" alt="${photo.description}">
+            <img class="event__photo" src="${photo.src}" alt="${he.encode(photo.description)}">
           `).join('')}
             </div>
           </div>`
@@ -113,7 +114,7 @@ const createDestinationTemplate = (destination) => {
   `;
 };
 
-const createOffersTemplate = (type, selectedOffers, offersByEventType) => {
+const createOffersTemplate = (type, selectedOffers, offersByEventType, isDisabled) => {
   const availableOffers = offersByEventType.get(type) ?? [];
 
   if (availableOffers.length === 0) {
@@ -136,9 +137,10 @@ const createOffersTemplate = (type, selectedOffers, offersByEventType) => {
               name="event-offer-${id}"
               value="${id}"
               ${selectedOffers.includes(id) ? 'checked' : ''}
+              ${isDisabled ? 'disabled' : ''}
             >
             <label class="event__offer-label" for="event-offer-${id}">
-              <span class="event__offer-title">${title}</span>
+              <span class="event__offer-title">${he.encode(title)}</span>
                 &plus;&euro;&nbsp;
               <span class="event__offer-price">${price}</span>
             </label>
@@ -149,8 +151,8 @@ const createOffersTemplate = (type, selectedOffers, offersByEventType) => {
   `;
 };
 
-const createDetailsTemplate = (type, selectedOffers, offersByEventType, destination) => {
-  const offersTemplate = createOffersTemplate(type, selectedOffers, offersByEventType);
+const createDetailsTemplate = (type, selectedOffers, offersByEventType, destination, isDisabled) => {
+  const offersTemplate = createOffersTemplate(type, selectedOffers, offersByEventType, isDisabled);
   const destinationTemplate = createDestinationTemplate(destination);
 
   const detailsTemplate =
@@ -167,7 +169,7 @@ const createDetailsTemplate = (type, selectedOffers, offersByEventType, destinat
 };
 
 const formatEvent = (event, destinationsById) => {
-  const {destination: destinationId, dateFrom, dateTo} = event;
+  const { destination: destinationId, dateFrom, dateTo } = event;
 
   const startDatetime = dateFrom
     ? dayjs(dateFrom).format(DISPLAY_DATE_TIME_FORMAT)
@@ -187,21 +189,23 @@ const formatEvent = (event, destinationsById) => {
 };
 
 const createEventEditFormTemplate = (event, isNewEvent, destinationsById, destinationsByName, offersByEventType) => {
-  const view = formatEvent(event, destinationsById);
-  const {destination, type, price, offers, startDatetime, endDatetime} = view;
+  const eventData = formatEvent(event, destinationsById);
+  const { destination, type, price, offers, startDatetime, endDatetime, isDisabled, isSaving, isDeleting } = eventData;
 
   return (
     `<li class="trip-events__item">
       <form class="event event--edit" action="#" method="post">
         <header class="event__header">
-          ${createTypeWrapperTemplate(type)}
-          ${createDestinationFieldgroupTemplate(type, destination, destinationsByName)}
-          ${createTimeFieldgroupTemplate(startDatetime, endDatetime)}
-          ${createPriceFieldgroupTemplate(price)}
+          ${createTypeWrapperTemplate(type, isDisabled)}
+          ${createDestinationFieldgroupTemplate(type, destination, destinationsByName, isDisabled)}
+          ${createTimeFieldgroupTemplate(startDatetime, endDatetime, isDisabled)}
+          ${createPriceFieldgroupTemplate(price, isDisabled)}
 
-          <button class="event__save-btn  btn  btn--blue" type="submit">Save</button>
+          <button class="event__save-btn  btn  btn--blue" type="submit" ${isDisabled ? 'disabled' : ''}>
+            ${isSaving ? 'Saving...' : 'Save'}
+          </button>
           <button class="event__reset-btn" type="reset">
-            ${isNewEvent ? 'Cancel' : 'Delete'}
+            ${isNewEvent ? 'Cancel' : `${isDeleting ? 'Deleting...' : 'Delete'}`}
           </button>
 
           ${isNewEvent ? '' : `
@@ -210,7 +214,7 @@ const createEventEditFormTemplate = (event, isNewEvent, destinationsById, destin
             </button>
             `}
         </header>
-        ${createDetailsTemplate(type, offers, offersByEventType, destination)}
+        ${createDetailsTemplate(type, offers, offersByEventType, destination, isDisabled)}
       </form>
     </li>`
   );
@@ -329,7 +333,9 @@ export default class EventEditFormView extends AbstractStatefulView {
   }
 
   #validatePrice(input) {
-    if (!REGEX_PRICE.test(input.value)) {
+    const value = input.value.trim();
+
+    if (!REGEX_PRICE.test(value)) {
       input.setCustomValidity('Enter a positive integer');
     } else {
       input.setCustomValidity('');
@@ -341,7 +347,8 @@ export default class EventEditFormView extends AbstractStatefulView {
   #formSubmitHandler = (evt) => {
     evt.preventDefault();
 
-    const isPriceValid = this.#validatePrice(this.element.querySelector('.event__input--price'));
+    const priceInput = this.element.querySelector('.event__input--price');
+    const isPriceValid = this.#validatePrice(priceInput);
 
     const hasDates = this._state.dateFrom && this._state.dateTo;
 
@@ -349,11 +356,7 @@ export default class EventEditFormView extends AbstractStatefulView {
       return;
     }
 
-    // if (!evt.target.reportValidity()) {
-    //   return;
-    // }
-
-    this.#handleFormSubmit(EventEditFormView.parseStatetoEvent(this._state));
+    this.#handleFormSubmit(EventEditFormView.parseStateToEvent(this._state));
   };
 
   #editCloseHandler = (evt) => {
@@ -364,7 +367,7 @@ export default class EventEditFormView extends AbstractStatefulView {
   #eventTypeChangeHandler = ({ target }) => {
     this.updateElement({
       type: target.value,
-      offers: []
+      offers: [],
     });
   };
 
@@ -385,6 +388,10 @@ export default class EventEditFormView extends AbstractStatefulView {
   };
 
   #priceChangeHandler = ({ target }) => {
+    if (target.value === '') {
+      return;
+    }
+
     if (!this.#validatePrice(target)) {
       return;
     }
@@ -408,32 +415,39 @@ export default class EventEditFormView extends AbstractStatefulView {
 
   #eventDeleteClickHandler = (evt) => {
     evt.preventDefault();
-    this.#handleDeleteClick(EventEditFormView.parseStatetoEvent(this._state));
+    this.#handleDeleteClick(EventEditFormView.parseStateToEvent(this._state));
   };
 
   #startDateChangeHandler = ([userDate]) => {
-    this._setState({
+    this.updateElement({
       dateFrom: userDate,
     });
     this.#endDatePicker.set('minDate', this._state.dateFrom);
   };
 
   #endDateChangeHandler = ([userDate]) => {
-    this._setState({
+    this.updateElement({
       dateTo: userDate,
     });
     this.#startDatePicker.set('maxDate', this._state.dateTo);
   };
 
   static parseEventToState(event) {
-    return {...event};
+    return {
+      ...event,
+      isDisabled: false,
+      isSaving: false,
+      isDeleting: false
+    };
   }
 
-  static parseStatetoEvent(state) {
+  static parseStateToEvent(state) {
     const event = {...state};
+
+    delete event.isDisabled;
+    delete event.isSaving;
+    delete event.isDeleting;
 
     return event;
   }
 }
-
-// Введённые пользователем данные экранируются.

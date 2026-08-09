@@ -11,7 +11,7 @@ const NoEventMessage = {
 const createNoEventTemplate = (filterType) => {
   const text = NoEventMessage[filterType];
 
-  return `<p class="trip-events__msg">${text}</p>`;
+  return `<p class="trip-events__msg">${ text }</p>`;
 };
 
 export default class NoEventView extends AbstractView {

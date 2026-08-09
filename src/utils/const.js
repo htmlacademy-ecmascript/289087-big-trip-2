@@ -1,4 +1,4 @@
-export const BLANK_EVENT = {
+const BLANK_EVENT = {
   destination: null,
   type: 'flight',
   offers: [],
@@ -8,7 +8,7 @@ export const BLANK_EVENT = {
   isFavorite: false
 };
 
-export const EVENT_TYPES = [
+const EVENT_TYPES = [
   'taxi',
   'bus',
   'train',
@@ -20,24 +20,14 @@ export const EVENT_TYPES = [
   'restaurant'
 ];
 
-export const DESTINATIONS = [
-  'Amsterdam',
-  'Chamonix',
-  'Geneva',
-  'Paris',
-  'Zurich',
-  'London',
-  'Stuttgart'
-];
-
-export const FilterType = {
+const FilterType = {
   EVERYTHING: 'everything',
   FUTURE: 'future',
   PRESENT: 'present',
-  PAST: 'past',
+  PAST: 'past'
 };
 
-export const SortType = {
+const SortType = {
   DEFAULT: 'day',
   EVENT: 'event',
   TIME: 'time',
@@ -45,15 +35,23 @@ export const SortType = {
   OFFERS: 'offers'
 };
 
-export const UserAction = {
+const UserAction = {
   UPDATE_EVENT: 'UPDATE_EVENT',
   ADD_EVENT: 'ADD_EVENT',
   DELETE_EVENT: 'DELETE_EVENT'
 };
 
-export const UpdateType = {
+const UpdateType = {
   PATCH: 'PATCH',
   MINOR: 'MINOR',
   MAJOR: 'MAJOR',
-  INIT: 'INIT',
+  INIT: 'INIT'
 };
+
+const LoadingStatus = {
+  LOADING: 'LOADING',
+  FAILURE: 'FAILURE',
+  READY: 'READY'
+};
+
+export { BLANK_EVENT, EVENT_TYPES, FilterType, SortType, UserAction, UpdateType, LoadingStatus };

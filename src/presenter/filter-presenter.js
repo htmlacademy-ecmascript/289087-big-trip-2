@@ -5,6 +5,7 @@ import { FilterType, UpdateType } from '../utils/const.js';
 
 export default class FilterPresenter {
   #filtersContainer = null;
+
   #filterModel = null;
   #eventsModel = null;
 

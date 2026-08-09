@@ -1,15 +1,19 @@
 import { remove, render, replace } from '../framework/render.js';
 import EventEditFormView from '../view/event-edit-form-view.js';
 import EventView from '../view/event-view.js';
-import {UserAction, UpdateType} from '../utils/const.js';
+import { UserAction, UpdateType } from '../utils/const.js';
 
 const Mode = {
   DEFAULT: 'DEFAULT',
-  EDITING: 'EDITING',
+  EDITING: 'EDITING'
 };
 
 export default class EventPresenter {
   #eventsListContainer = null;
+
+  #destinationsModel = null;
+  #offersModel = null;
+
   #handleDataChange = null;
   #handleModeChange = null;
 
@@ -17,8 +21,6 @@ export default class EventPresenter {
   #eventEditFormComponent = null;
 
   #event = null;
-  #destinationsModel = null;
-  #offersModel = null;
   #mode = Mode.DEFAULT;
 
   constructor({
@@ -71,6 +73,7 @@ export default class EventPresenter {
 
     if (this.#mode === Mode.EDITING) {
       replace(this.#eventEditFormComponent, prevEventEditFormComponent);
+      this.#mode = Mode.DEFAULT;
     }
 
     remove(prevEventComponent);
@@ -92,6 +95,41 @@ export default class EventPresenter {
     }
   }
 
+  setSaving() {
+    if (this.#mode === Mode.EDITING) {
+      this.#eventEditFormComponent.updateElement({
+        isDisabled: true,
+        isSaving: true,
+      });
+    }
+  }
+
+  setDeleting() {
+    if (this.#mode === Mode.EDITING) {
+      this.#eventEditFormComponent.updateElement({
+        isDisabled: true,
+        isDeleting: true,
+      });
+    }
+  }
+
+  setAborting() {
+    if (this.#mode === Mode.DEFAULT) {
+      this.#eventComponent.shake();
+      return;
+    }
+
+    const resetFormState = () => {
+      this.#eventEditFormComponent.updateElement({
+        isDisabled: false,
+        isSaving: false,
+        isDeleting: false,
+      });
+    };
+
+    this.#eventEditFormComponent.shake(resetFormState);
+  }
+
   #replaceFormToEvent() {
     replace(this.#eventComponent, this.#eventEditFormComponent);
     document.removeEventListener('keydown', this.#escKeyDownHandler);
@@ -99,9 +137,9 @@ export default class EventPresenter {
   }
 
   #replaceEventToForm() {
+    this.#handleModeChange();
     replace(this.#eventEditFormComponent, this.#eventComponent);
     document.addEventListener('keydown', this.#escKeyDownHandler);
-    this.#handleModeChange();
     this.#mode = Mode.EDITING;
   }
 
@@ -123,12 +161,6 @@ export default class EventPresenter {
       UpdateType.MINOR,
       update
     );
-    this.#replaceFormToEvent();
-  };
-
-  #handleEditClose = () => {
-    this.#eventEditFormComponent.reset(this.#event);
-    this.#replaceFormToEvent();
   };
 
   #handleDeleteClick = (update) => {
@@ -137,6 +169,11 @@ export default class EventPresenter {
       UpdateType.MINOR,
       update
     );
+  };
+
+  #handleEditClose = () => {
+    this.#eventEditFormComponent.reset(this.#event);
+    this.#replaceFormToEvent();
   };
 
   #escKeyDownHandler = (evt) => {

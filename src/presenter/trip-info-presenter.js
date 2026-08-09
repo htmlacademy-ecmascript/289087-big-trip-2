@@ -1,6 +1,9 @@
 import dayjs from 'dayjs';
 import TripInfoView from '../view/trip-info-view.js';
 import { remove, render, RenderPosition, replace } from '../framework/render.js';
+import { sortByDate } from '../utils/sort.js';
+
+const MAX_TITLE_POINTS = 3;
 
 export default class TripInfoPresenter {
   #container = null;
@@ -20,7 +23,7 @@ export default class TripInfoPresenter {
   }
 
   init() {
-    const events = this.#eventsModel.events;
+    const events = [...this.#eventsModel.events].sort(sortByDate);
 
     const prevTripInfoComponent = this.#tripInfoComponent;
 
@@ -31,9 +34,9 @@ export default class TripInfoPresenter {
     }
 
     this.#tripInfoComponent = new TripInfoView({
-      route: this.#getRoute(events),
+      title: this.#getTitle(events),
       dates: this.#getDates(events),
-      totalPrice: this.#getTotalPrice(events),
+      cost: this.#getTotalPrice(events),
     });
 
 
@@ -46,33 +49,34 @@ export default class TripInfoPresenter {
     remove(prevTripInfoComponent);
   }
 
-  #getRoute(events) {
+  #getTitle(events) {
     const destinationsById = this.#destinationsModel.destinationsById;
 
     const destinations = events.map(
       ({ destination }) =>
-        destinationsById.get(destination).name
+        destinationsById.get(destination)?.name ?? ''
     );
 
-    if (destinations.length <= 3) {
-      return destinations.join(' — ');
+    if (destinations.length <= MAX_TITLE_POINTS) {
+      return destinations.join('&nbsp;&mdash;&nbsp;');
     }
 
-    return `${destinations[0]} — ... — ${destinations.at(-1)}`;
+    return `${destinations[0]}&nbsp;&mdash;&nbsp;...&nbsp;&mdash;&nbsp;${destinations.at(-1)}`;
   }
 
   #getDates(events) {
-    const start = events[0].dateFrom;
-    const finish = events.at(-1).dateTo;
+    const { dateFrom } = events[0];
+    const { dateTo } = events.at(-1);
 
-    const firstDate = dayjs(start).format('MMM DD');
-    const lastDate = dayjs(finish).format('MMM DD');
+    const firstDate = dayjs(dateFrom).format('DD MMM');
+    const lastDate = dayjs(dateTo).format('DD MMM');
 
     return `${firstDate}&nbsp;&mdash;&nbsp;${lastDate}`;
   }
 
   #getTotalPrice(events) {
     const offersById = this.#offersModel.offersById;
+
     return events.reduce((total, event) => {
       const offersPrice = event.offers.reduce((sum, offerId) => {
         const offer = offersById.get(offerId);

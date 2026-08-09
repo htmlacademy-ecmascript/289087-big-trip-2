@@ -23,10 +23,6 @@ export default class DestinationsModel {
   }
 
   async init() {
-    try {
-      this.#destinations = await this.#destinationsApiService.destinations;
-    } catch(err) {
-      this.#destinations = [];
-    }
+    this.#destinations = await this.#destinationsApiService.destinations;
   }
 }
