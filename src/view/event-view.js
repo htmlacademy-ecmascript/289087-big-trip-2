@@ -27,16 +27,16 @@ const humanizeDuration = (duration) => {
 const formatEvent = (event, destinationsById, offersById) => {
   const { offers: offerIds, destination: destinationId, isFavorite, dateFrom, dateTo } = event;
 
-  const startDate = dayjs(dateFrom);
-  const endDate = dayjs(dateTo);
+  const start = dayjs(dateFrom);
+  const end = dayjs(dateTo);
 
-  const eventDate = startDate.format(DATE_FORMAT);
-  const shortDate = startDate.format(SHORT_DATE_FORMAT);
-  const startDatetime = startDate.format(HTML_DATE_TIME_FORMAT);
-  const endDatetime = endDate.format(HTML_DATE_TIME_FORMAT);
-  const startTime = startDate.format(TIME_FORMAT);
-  const endTime = endDate.format(TIME_FORMAT);
-  const duration = humanizeDuration(endDate.diff(startDate, 'minute'));
+  const eventDate = start.format(DATE_FORMAT);
+  const shortDate = start.format(SHORT_DATE_FORMAT);
+  const startDatetime = start.format(HTML_DATE_TIME_FORMAT);
+  const endDatetime = end.format(HTML_DATE_TIME_FORMAT);
+  const startTime = start.format(TIME_FORMAT);
+  const endTime = end.format(TIME_FORMAT);
+  const duration = humanizeDuration(end.diff(start, 'minute'));
 
   const favoriteButtonClassName = isFavorite
     ? 'event__favorite-btn--active'
@@ -45,6 +45,7 @@ const formatEvent = (event, destinationsById, offersById) => {
   const offers = offerIds
     .map((id) => offersById.get(id))
     .filter(Boolean);
+
   const destination = destinationsById.get(destinationId)?.name ?? '';
 
   return {
@@ -83,7 +84,7 @@ const createEventTemplate = (event, destinationsById, offersById) => {
         <div class="event__type">
           <img class="event__type-icon" width="42" height="42" src="img/icons/${type}.png" alt="Event type icon">
         </div>
-        <h3 class="event__title">${type} ${he.encode(destination)}</h3>
+        <h3 class="event__title">${he.encode(type)} ${he.encode(destination)}</h3>
         <div class="event__schedule">
           <p class="event__time">
             <time class="event__start-time" datetime="${startDatetime}">${startTime}</time>
@@ -117,6 +118,7 @@ export default class EventView extends AbstractView {
   #event = null;
   #destinationsById = null;
   #offersById = null;
+
   #handleEditOpen = null;
   #handleFavoriteClick = null;
 
