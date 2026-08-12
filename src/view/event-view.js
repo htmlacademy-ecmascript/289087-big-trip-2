@@ -1,23 +1,32 @@
 import dayjs from 'dayjs';
 import he from 'he';
 import AbstractView from '../framework/view/abstract-view.js';
+import { capitalize } from '../utils/common.js';
 
-const MINUTES_IN_DAY = 1440;
-const MINUTES_IN_HOUR = 60;
-const DATE_FORMAT = 'YYYY-MM-DD';
-const HTML_DATE_TIME_FORMAT = 'YYYY-MM-DDTHH:mm';
-const SHORT_DATE_FORMAT = 'MMM DD';
-const TIME_FORMAT = 'HH:mm';
+const DateFormat = {
+  FULL_DATE: 'YYYY-MM-DD',
+  HTML_DATETIME: 'YYYY-MM-DDTHH:mm',
+  SHORT_DATE: 'MMM DD',
+  TIME: 'HH:mm',
+};
+
+const Time = {
+  MINUTES_IN_DAY: 1440,
+  MINUTES_IN_HOUR: 60,
+};
+
+const DURATION_PART_LENGTH = 2;
+const DURATION_PADDING_CHARACTER = '0';
 
 const humanizeDuration = (duration) => {
-  const days = Math.floor(duration / MINUTES_IN_DAY);
-  const hours = Math.floor((duration % MINUTES_IN_DAY) / MINUTES_IN_HOUR);
-  const minutes = duration % MINUTES_IN_HOUR;
+  const days = Math.floor(duration / Time.MINUTES_IN_DAY);
+  const hours = Math.floor((duration % Time.MINUTES_IN_DAY) / Time.MINUTES_IN_HOUR);
+  const minutes = duration % Time.MINUTES_IN_HOUR;
 
   return [
-    days && `${String(days).padStart(2, '0')}D`,
-    (days || hours) && `${String(hours).padStart(2, '0')}H`,
-    `${String(minutes).padStart(2, '0')}M`,
+    days && `${String(days).padStart(DURATION_PART_LENGTH, DURATION_PADDING_CHARACTER)}D`,
+    (days || hours) && `${String(hours).padStart(DURATION_PART_LENGTH, DURATION_PADDING_CHARACTER)}H`,
+    `${String(minutes).padStart(DURATION_PART_LENGTH, DURATION_PADDING_CHARACTER)}M`,
   ]
     .filter(Boolean)
     .join(' ');
@@ -30,12 +39,12 @@ const formatEvent = (event, destinationsById, offersById) => {
   const start = dayjs(dateFrom);
   const end = dayjs(dateTo);
 
-  const eventDate = start.format(DATE_FORMAT);
-  const shortDate = start.format(SHORT_DATE_FORMAT);
-  const startDatetime = start.format(HTML_DATE_TIME_FORMAT);
-  const endDatetime = end.format(HTML_DATE_TIME_FORMAT);
-  const startTime = start.format(TIME_FORMAT);
-  const endTime = end.format(TIME_FORMAT);
+  const eventDate = start.format(DateFormat.FULL_DATE);
+  const shortDate = start.format(DateFormat.SHORT_DATE);
+  const startDatetime = start.format(DateFormat.HTML_DATETIME);
+  const endDatetime = end.format(DateFormat.HTML_DATETIME);
+  const startTime = start.format(DateFormat.TIME);
+  const endTime = end.format(DateFormat.TIME);
   const duration = humanizeDuration(end.diff(start, 'minute'));
 
   const favoriteButtonClassName = isFavorite
@@ -69,7 +78,7 @@ const createOffersTemplate = (offers) =>
       <li class="event__offer">
         <span class="event__offer-title">${he.encode(title)}</span>
           &plus;&euro;&nbsp;
-        <span class="event__offer-price">${price}</span>
+        <span class="event__offer-price">${he.encode(String(price))}</span>
       </li>
     `).join('');
 
@@ -82,9 +91,9 @@ const createEventTemplate = (event, destinationsById, offersById) => {
       <div class="event">
         <time class="event__date" datetime="${eventDate}">${shortDate}</time>
         <div class="event__type">
-          <img class="event__type-icon" width="42" height="42" src="img/icons/${type}.png" alt="Event type icon">
+          <img class="event__type-icon" width="42" height="42" src="img/icons/${he.encode(type)}.png" alt="Event type icon">
         </div>
-        <h3 class="event__title">${he.encode(type)} ${he.encode(destination)}</h3>
+        <h3 class="event__title">${he.encode(capitalize(type))} ${he.encode(destination)}</h3>
         <div class="event__schedule">
           <p class="event__time">
             <time class="event__start-time" datetime="${startDatetime}">${startTime}</time>
@@ -94,7 +103,7 @@ const createEventTemplate = (event, destinationsById, offersById) => {
           <p class="event__duration">${duration}</p>
         </div>
         <p class="event__price">
-          &euro;&nbsp;<span class="event__price-value">${price}</span>
+          &euro;&nbsp;<span class="event__price-value">${he.encode(String(price))}</span>
         </p>
         <h4 class="visually-hidden">Offers:</h4>
         <ul class="event__selected-offers">

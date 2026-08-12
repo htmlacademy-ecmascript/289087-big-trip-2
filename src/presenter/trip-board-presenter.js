@@ -67,7 +67,7 @@ export default class TripBoardPresenter {
     this.#filterModel.addObserver(this.#handleModelAction);
   }
 
-  get events() {
+  get #events() {
     const filterType = this.#filterModel.filter;
     const events = this.#eventsModel.events;
     const filteredEvents = [...filter[filterType](events)];
@@ -84,7 +84,7 @@ export default class TripBoardPresenter {
   }
 
   init() {
-    this.#renderTripBoard();
+    this.#render();
   }
 
   createEvent() {
@@ -98,8 +98,8 @@ export default class TripBoardPresenter {
 
   showLoadingError() {
     this.#loadingStatus = LoadingStatus.FAILURE;
-    this.#clearTripBoard();
-    this.#renderTripBoard();
+    this.#clear();
+    this.#render();
   }
 
   #renderEvent(event) {
@@ -139,7 +139,7 @@ export default class TripBoardPresenter {
     render(this.#noEventComponent, this.#tripContainer);
   }
 
-  #renderTripBoard() {
+  #render() {
     switch (this.#loadingStatus) {
       case LoadingStatus.LOADING:
       case LoadingStatus.FAILURE:
@@ -147,7 +147,7 @@ export default class TripBoardPresenter {
         return;
     }
 
-    const events = this.events;
+    const events = this.#events;
 
     render(this.#eventsListComponent, this.#tripContainer);
 
@@ -160,7 +160,7 @@ export default class TripBoardPresenter {
     events.forEach((event) => this.#renderEvent(event));
   }
 
-  #clearTripBoard(resetSortType = false) {
+  #clear(resetSortType = false) {
     this.#newEventPresenter.destroy();
 
     this.#eventsPresenters.forEach((presenter) => presenter.destroy());
@@ -176,7 +176,7 @@ export default class TripBoardPresenter {
   }
 
   #handleNewEventDestroy = () => {
-    if (this.events.length === 0) {
+    if (this.#events.length === 0) {
       this.#renderNoEvent();
     }
 
@@ -190,8 +190,8 @@ export default class TripBoardPresenter {
 
     this.#currentSortType = sortType;
 
-    this.#clearTripBoard();
-    this.#renderTripBoard();
+    this.#clear();
+    this.#render();
   };
 
   #handleModeChange = () => {
@@ -238,17 +238,17 @@ export default class TripBoardPresenter {
         this.#eventsPresenters.get(data.id).init(data);
         break;
       case UpdateType.MINOR:
-        this.#clearTripBoard();
-        this.#renderTripBoard();
+        this.#clear();
+        this.#render();
         break;
       case UpdateType.MAJOR:
-        this.#clearTripBoard(true);
-        this.#renderTripBoard();
+        this.#clear(true);
+        this.#render();
         break;
       case UpdateType.INIT:
         this.#loadingStatus = LoadingStatus.READY;
-        this.#clearTripBoard();
-        this.#renderTripBoard();
+        this.#clear();
+        this.#render();
         break;
     }
   };

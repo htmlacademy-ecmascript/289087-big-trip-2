@@ -20,7 +20,7 @@ export default class FilterPresenter {
     this.#filterModel.addObserver(this.#handleModelAction);
   }
 
-  get filters() {
+  get #filters() {
     const events = this.#eventsModel.events;
 
     return Object.values(FilterType).map((type) => ({
@@ -30,7 +30,7 @@ export default class FilterPresenter {
   }
 
   init() {
-    const filters = this.filters;
+    const filters = this.#filters;
     const prevFilterComponent = this.#filterComponent;
 
     this.#filterComponent = new FiltersView({
@@ -48,7 +48,11 @@ export default class FilterPresenter {
     remove(prevFilterComponent);
   }
 
-  #handleModelAction = () => {
+  #handleModelAction = (updateType) => {
+    if (updateType === UpdateType.PATCH) {
+      return;
+    }
+
     this.init();
   };
 

@@ -11,7 +11,8 @@ import DestinationsApiService from './api-service/destinations-api-service.js';
 import OffersApiService from './api-service/offers-api-service.js';
 import TripInfoPresenter from './presenter/trip-info-presenter.js';
 
-const AUTHORIZATION = `Basic ${Math.random().toString(36).slice(2)}`;
+const AUTHORIZATION_BASE = 36;
+const AUTHORIZATION = `Basic ${Math.random().toString(AUTHORIZATION_BASE).slice(AUTHORIZATION_START_INDEX)}`;
 const API_ENDPOINT = 'https://22.objects.htmlacademy.pro/big-trip';
 
 const tripEventsElement = document.querySelector('.trip-events');
@@ -59,12 +60,12 @@ const newEventButtonComponent = new NewEventButtonView({
 });
 
 function handleNewEventFormClose() {
-  newEventButtonComponent.element.disabled = false;
+  newEventButtonComponent.setDisabled(false);
 }
 
 function handleNewEventButtonClick() {
   tripBoardPresenter.createEvent();
-  newEventButtonComponent.element.disabled = true;
+  newEventButtonComponent.setDisabled(true);
 }
 
 filterPresenter.init();

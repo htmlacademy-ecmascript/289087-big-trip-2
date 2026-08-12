@@ -44,7 +44,7 @@ export default class NewEventPresenter {
 
     render(this.#eventEditFormComponent, this.#eventsListContainer, RenderPosition.AFTERBEGIN);
 
-    document.addEventListener('keydown', this.#escKeyDownHandler);
+    this.#eventEditFormComponent.setEscKeyDownHandler(this.#escKeyDownHandler);
   }
 
   destroy() {
@@ -52,10 +52,10 @@ export default class NewEventPresenter {
       return;
     }
 
+    this.#eventEditFormComponent.removeEscKeyDownHandler(this.#escKeyDownHandler);
+
     remove(this.#eventEditFormComponent);
     this.#eventEditFormComponent = null;
-
-    document.removeEventListener('keydown', this.#escKeyDownHandler);
 
     this.#handleDestroy();
   }
@@ -68,15 +68,11 @@ export default class NewEventPresenter {
   }
 
   setAborting() {
-    const resetFormState = () => {
-      this.#eventEditFormComponent.updateElement({
-        isDisabled: false,
-        isSaving: false,
-        isDeleting: false,
-      });
-    };
+    if (this.#eventEditFormComponent === null) {
+      return;
+    }
 
-    this.#eventEditFormComponent.shake(resetFormState);
+    this.#eventEditFormComponent.shake(this.#eventEditFormComponent.resetState);
   }
 
   #handleFormSubmit = (update) => {
@@ -92,9 +88,16 @@ export default class NewEventPresenter {
   };
 
   #escKeyDownHandler = (evt) => {
-    if (evt.key === 'Escape') {
-      evt.preventDefault();
-      this.destroy();
+    if (evt.key !== 'Escape') {
+      return;
     }
+
+    evt.preventDefault();
+
+    if (this.#eventEditFormComponent.isDisabled) {
+      return;
+    }
+
+    this.destroy();
   };
 }
