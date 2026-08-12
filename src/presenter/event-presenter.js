@@ -90,7 +90,6 @@ export default class EventPresenter {
 
   resetView() {
     if (this.#mode !== Mode.DEFAULT) {
-      this.#eventEditFormComponent.reset(this.#event);
       this.#replaceFormToEvent();
     }
   }
@@ -98,7 +97,6 @@ export default class EventPresenter {
   setSaving() {
     if (this.#mode === Mode.EDITING) {
       this.#eventEditFormComponent.updateElement({
-        isDisabled: true,
         isSaving: true,
       });
     }
@@ -107,7 +105,6 @@ export default class EventPresenter {
   setDeleting() {
     if (this.#mode === Mode.EDITING) {
       this.#eventEditFormComponent.updateElement({
-        isDisabled: true,
         isDeleting: true,
       });
     }
@@ -123,6 +120,7 @@ export default class EventPresenter {
   }
 
   #replaceFormToEvent() {
+    this.#eventEditFormComponent.reset(this.#event);
     this.#eventEditFormComponent.removeEscKeyDownHandler(this.#escKeyDownHandler);
     replace(this.#eventComponent, this.#eventEditFormComponent);
     this.#mode = Mode.DEFAULT;
@@ -164,7 +162,6 @@ export default class EventPresenter {
   };
 
   #handleEditClose = () => {
-    this.#eventEditFormComponent.reset(this.#event);
     this.#replaceFormToEvent();
   };
 
@@ -179,7 +176,6 @@ export default class EventPresenter {
       return;
     }
 
-    this.#eventEditFormComponent.reset(this.#event);
     this.#replaceFormToEvent();
   };
 }

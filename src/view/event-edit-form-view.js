@@ -196,7 +196,8 @@ const formatEvent = (event, destinationsById) => {
 
 const createEventEditFormTemplate = (event, isNewEvent, destinationsById, destinationsByName, offersByEventType) => {
   const eventData = formatEvent(event, destinationsById);
-  const { destination, type, price, offers, startDatetime, endDatetime, isDisabled, isSaving, isDeleting } = eventData;
+  const { destination, type, price, offers, startDatetime, endDatetime, isSaving, isDeleting } = eventData;
+  const isDisabled = isSaving || isDeleting;
 
   return (
     `<li class="trip-events__item">
@@ -270,7 +271,7 @@ export default class EventEditFormView extends AbstractStatefulView {
   }
 
   get isDisabled() {
-    return this._state.isDisabled;
+    return this._state.isSaving || this._state.isDeleting;
   }
 
   removeElement() {
@@ -320,7 +321,6 @@ export default class EventEditFormView extends AbstractStatefulView {
 
   resetState = () => {
     this.updateElement({
-      isDisabled: false,
       isSaving: false,
       isDeleting: false,
     });
@@ -386,7 +386,7 @@ export default class EventEditFormView extends AbstractStatefulView {
   #editCloseHandler = (evt) => {
     evt.preventDefault();
 
-    if (this._state.isDisabled) {
+    if (this.isDisabled) {
       return;
     }
 
@@ -464,7 +464,6 @@ export default class EventEditFormView extends AbstractStatefulView {
   static #parseEventToState(event) {
     return {
       ...event,
-      isDisabled: false,
       isSaving: false,
       isDeleting: false
     };
@@ -473,7 +472,6 @@ export default class EventEditFormView extends AbstractStatefulView {
   static #parseStateToEvent(state) {
     const event = {...state};
 
-    delete event.isDisabled;
     delete event.isSaving;
     delete event.isDeleting;
 

@@ -62,7 +62,6 @@ export default class NewEventPresenter {
 
   setSaving() {
     this.#eventEditFormComponent.updateElement({
-      isDisabled: true,
       isSaving: true,
     });
   }
