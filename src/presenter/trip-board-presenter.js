@@ -202,34 +202,37 @@ export default class TripBoardPresenter {
   #handleViewAction = async (actionType, updateType, update) => {
     this.#uiBlocker.block();
 
-    switch (actionType) {
-      case UserAction.UPDATE_EVENT:
-        this.#eventsPresenters.get(update.id).setSaving();
-        try {
+    try {
+      switch (actionType) {
+        case UserAction.UPDATE_EVENT:
+          this.#eventsPresenters.get(update.id).setSaving();
           await this.#eventsModel.updateEvent(updateType, update);
-        } catch(err) {
-          this.#eventsPresenters.get(update.id).setAborting();
-        }
-        break;
-      case UserAction.ADD_EVENT:
-        this.#newEventPresenter.setSaving();
-        try {
-          await this.#eventsModel.addEvent(updateType, update);
-        } catch(err) {
-          this.#newEventPresenter.setAborting();
-        }
-        break;
-      case UserAction.DELETE_EVENT:
-        this.#eventsPresenters.get(update.id).setDeleting();
-        try {
-          await this.#eventsModel.deleteEvent(updateType, update);
-        } catch (err) {
-          this.#eventsPresenters.get(update.id).setAborting();
-        }
-        break;
-    }
+          break;
 
-    this.#uiBlocker.unblock();
+        case UserAction.ADD_EVENT:
+          this.#newEventPresenter.setSaving();
+          await this.#eventsModel.addEvent(updateType, update);
+          break;
+
+        case UserAction.DELETE_EVENT:
+          this.#eventsPresenters.get(update.id).setDeleting();
+          await this.#eventsModel.deleteEvent(updateType, update);
+          break;
+      }
+    } catch (err) {
+      switch (actionType) {
+        case UserAction.UPDATE_EVENT:
+        case UserAction.DELETE_EVENT:
+          this.#eventsPresenters.get(update.id).setAborting();
+          break;
+
+        case UserAction.ADD_EVENT:
+          this.#newEventPresenter.setAborting();
+          break;
+      }
+    } finally {
+      this.#uiBlocker.unblock();
+    }
   };
 
   #handleModelAction = (updateType, data) => {
