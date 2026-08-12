@@ -1,9 +1,12 @@
 import dayjs from 'dayjs';
+import he from 'he';
 import TripInfoView from '../view/trip-info-view.js';
 import { remove, render, RenderPosition, replace } from '../framework/render.js';
 import { sortByDate } from '../utils/sort.js';
+import { UpdateType } from '../utils/const.js';
 
 const MAX_TITLE_POINTS = 3;
+const SHORT_DATE_FORMAT = 'DD MMM';
 
 export default class TripInfoPresenter {
   #container = null;
@@ -12,7 +15,7 @@ export default class TripInfoPresenter {
   #destinationsModel = null;
   #offersModel = null;
 
-  #tripInfoComponent = null;
+  #component = null;
 
   constructor({ container, eventsModel, destinationsModel, offersModel }) {
     this.#container = container;
@@ -26,28 +29,28 @@ export default class TripInfoPresenter {
   init() {
     const events = [...this.#eventsModel.events].sort(sortByDate);
 
-    const prevTripInfoComponent = this.#tripInfoComponent;
+    const prevComponent = this.#component;
 
     if (events.length === 0) {
-      remove(prevTripInfoComponent);
-      this.#tripInfoComponent = null;
+      remove(prevComponent);
+      this.#component = null;
       return;
     }
 
-    this.#tripInfoComponent = new TripInfoView({
+    this.#component = new TripInfoView({
       title: this.#getTitle(events),
       dates: this.#getDates(events),
       cost: this.#getTotalPrice(events),
     });
 
 
-    if (prevTripInfoComponent === null) {
-      render(this.#tripInfoComponent, this.#container, RenderPosition.AFTERBEGIN);
+    if (prevComponent === null) {
+      render(this.#component, this.#container, RenderPosition.AFTERBEGIN);
       return;
     }
 
-    replace(this.#tripInfoComponent, prevTripInfoComponent);
-    remove(prevTripInfoComponent);
+    replace(this.#component, prevComponent);
+    remove(prevComponent);
   }
 
   #getTitle(events) {
@@ -55,7 +58,7 @@ export default class TripInfoPresenter {
 
     const destinations = events.map(
       ({ destination }) =>
-        destinationsById.get(destination)?.name ?? ''
+        he.encode(destinationsById.get(destination)?.name ?? '')
     );
 
     if (destinations.length <= MAX_TITLE_POINTS) {
@@ -69,8 +72,8 @@ export default class TripInfoPresenter {
     const { dateFrom } = events[0];
     const { dateTo } = events.at(-1);
 
-    const firstDate = dayjs(dateFrom).format('DD MMM');
-    const lastDate = dayjs(dateTo).format('DD MMM');
+    const firstDate = dayjs(dateFrom).format(SHORT_DATE_FORMAT);
+    const lastDate = dayjs(dateTo).format(SHORT_DATE_FORMAT);
 
     return `${firstDate}&nbsp;&mdash;&nbsp;${lastDate}`;
   }
@@ -89,7 +92,11 @@ export default class TripInfoPresenter {
     }, 0);
   }
 
-  #handleModelAction = () => {
+  #handleModelAction = (updateType) => {
+    if (updateType === UpdateType.PATCH) {
+      return;
+    }
+
     this.init();
   };
 }

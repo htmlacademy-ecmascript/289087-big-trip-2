@@ -1,10 +1,20 @@
 import dayjs from 'dayjs';
+import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
+import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
 import { FilterType } from './const.js';
 
+dayjs.extend(isSameOrBefore);
+dayjs.extend(isSameOrAfter);
+
 const isFuture = (event) => dayjs(event.dateFrom).isAfter(dayjs());
-const isPresent = (event) =>
-  dayjs(event.dateFrom).isBefore(dayjs()) &&
-  dayjs(event.dateTo).isAfter(dayjs());
+
+const isPresent = (event) => {
+  const currentTime = dayjs();
+
+  return dayjs(event.dateFrom).isSameOrBefore(currentTime) &&
+    dayjs(event.dateTo).isSameOrAfter(currentTime);
+};
+
 const isPast = (event) => dayjs(event.dateTo).isBefore(dayjs());
 
 const filter = {
